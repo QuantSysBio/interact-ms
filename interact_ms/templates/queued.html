@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel='stylesheet' type="text/css" href="{{ url_for('static',filename='styles/style.css') }}">
+	<script src="{{url_for('static', filename='index.js')}}"></script>
+	<title>interact-ms</title>
+</head>
+<body>
+	<dev class = "page-wrapper">
+	
+		<!-- header -->
+		{{ INTERACT_HEADER|safe }}
+		<hr>
+
+		<p class="adjusted-text">Your task is in the queue.</p>
+		<center>
+			<h2>interact-ms Queue</h2>
+			{{ queue_svg|safe }}
+		</center>
+
+		<br><br>
+
+        {{ INTERACT_FOOTER|safe }}
+	</dev>
+</body>
+</html>

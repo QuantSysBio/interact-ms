@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel='stylesheet' type="text/css" href="{{ url_for('static',filename='styles/style.css') }}">
+	<script src="{{url_for('static', filename='index.js')}}"></script>
+	<title>interact-ms</title>
+</head>
+<body>
+	{{ INTERACT_HEADER|safe }}
+    <div class = "contact-main-section">
+        <div class = "contact-top-section">
+             <p> References
+             </p>
+        </div>
+    </div>
+
+
+    <!-- First main -->
+    <dev class = "contact-main-section">
+        <dev class = "contact-top-section-description" style="height:300px">
+            <dev>
+            <p><b>Our Studies</b></p>
+            <p>
+                This paper describes the development of the inSPIRE rescoring pipeline:
+            </p>
+            <p>
+                Cormican, J. A., Horokhovskyi, Y., Soh, W. T., Mishto, M., and Liepe, J. (2022) inSPIRE: An open-source tool for increased mass spectrometry identification rates using Prosit spectral prediction. Mol Cell Proteomics.
+                (doi: <a href="https://doi.org/10.1016/j.mcpro.2022.100432">doi.org/10.1016/j.mcpro.2022.100432</a>)
+            </p>
+            <p>
+                Another article will soon be describing the development of PEPSeek.
+            </p>
+            <p><b>Tools used within interact-ms</b></p>
+            <p>
+                Please also cite the relevant publications of the rescoring tools used, see details on <a href=https://github.com/percolator/percolator>Percolator</a> and  <a href="https://github.com/wfondrie/mokapot">Mokapot</a>.
+            </p>
+    
+            <p>
+                Please also cite the relevant publications of the spectral predictors, see details on <a href="https://www.proteomicsdb.org/prosit">Prosit</a>.
+            </p>
+    
+            <p>
+                If using binding affinity please also cite the relevant publications for <a href="https://services.healthtech.dtu.dk/service.php?NetMHCpan-4.1">NetMHCpan</a> binding affinity predictions..
+            </p>
+
+            <p>
+                If using MSFragger via interact-ms, please also cite the relevant publications listed on the <a href="https://github.com/Nesvilab/MSFragger">MSFragger github</a>.
+            </p>
+
+            <p>
+                If you are uploading raw files, please also cite the <a href="https://github.com/compomics/ThermoRawFileParser">ThermoRawFileParser</a>.
+                <br><br><br>
+            </p>
+            </dev>
+		
+        </dev>
+	
+    </dev>
+   
+
+</body>
+</html>

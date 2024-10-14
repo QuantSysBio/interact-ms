@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel='stylesheet' type="text/css" href="{{ url_for('static',filename='styles/style.css') }}">
+	<script src="{{url_for('static', filename='index.js')}}"></script>
+	<title>interact-ms</title>
+</head>
+<body>
+	<dev class = "page-wrapper">
+	<!-- header -->
+	{{ INTERACT_HEADER|safe }}
+	<hr>
+	<table class="results-table">
+
+		<div class="res-row">
+			<div style="margin-left: 15%; padding-right:6%; width:500px;" class="res-column">
+				<h2>interact-ms Results</h2>
+				<p id="psm-fdr-increase">{{ inspire_increase }}</p>
+				Click to download all identifications on
+				<a href="http://{{ server_address }}:5000/interact/get_results/{{ user }}/{{ project }}/psms">
+					PSM level</a> or
+				<a href="http://{{ server_address }}:5000/interact/get_results/{{ user }}/{{ project }}/peptides">
+					peptide level</a>
+				or
+				<a href="http://{{ server_address }}:5000/interact/get_results/{{ user }}/{{ project }}/performance">click to view the inSPIRE performance report</a>		
+				<br>
+				<br>
+				{{ psm_fdr_html|safe }}
+				<br>
+			</div>
+
+			<div class="res-column" style="width: 500px;">
+				<h2>Quantitative Report</h2>
+				<p id="psm-fdr-increase">{{ quantified_count }}</p>
+
+				<a href="http://{{ server_address }}:5000/interact/get_results/{{ user }}/{{ project }}/quantification">
+					Click to download the quantification zip file
+				</a>
+				or
+				<a href="http://{{ server_address }}:5000/interact/get_results/{{ user }}/{{ project }}/quantReport">click to view the quantitative report</a>
+				<br>
+				<br>
+				{{ quant_html|safe }}
+			</div>
+		</div>
+
+		<div class="res-row">
+			<div id="PEPSeekPerformance" style="visibility: {{ pep_seek_visible }}; margin-left: 15%; ; padding-right:6%; width:500px;"  class="res-column">
+				<h2>PEPSeek Results</h2>
+				<p id="PEPSeek-increase">{{ pathogen_increase }}</p>
+				<a href="http://{{ server_address }}:5000/interact/get_results/{{ user }}/{{ project }}/PEPSeek">
+					Click to download the zip file with all epitope information
+				</a> or
+				<a href="http://{{ server_address }}:5000/interact/get_results/{{ user }}/{{ project }}/epitopeReport">
+					click to view the PEPSeek epitope report
+				</a>
+				<br>
+				<br>
+				{{ ep_bar|safe }}
+			</div>
+
+			<div class="res-column" style="width: 500px;">
+				<h2>Execution Logs</h2>
+				<p>Here you can see the details of execution</p>
+				<a href="http://{{ server_address }}:5000/interact/get_results/{{ user }}/{{ project }}/executionLog"> Click to download the log of execution</a>
+				or
+				<a href="http://{{ server_address }}:5000/interact-page/parameters/{{ user }}/{{ project }}">click to re-execute the pipeline with alternative parameters.</a>
+				<br>
+				<br>
+				{{ progress_html|safe }}
+			</div>
+		</table>
+	</div>
+	<br><br>
+
+	{{ INTERACT_FOOTER|safe }}
+
+	</dev>
+</body>
+</html>

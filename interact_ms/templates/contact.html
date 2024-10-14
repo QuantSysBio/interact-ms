@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel='stylesheet' type="text/css" href="{{ url_for('static',filename='styles/style.css') }}">
+	<script src="{{url_for('static', filename='index.js')}}"></script>
+	<title>interact-ms</title>
+</head>
+<body>
+	{{ INTERACT_HEADER|safe }}
+    <!-- top section -->
+    <dev class = "contact-main-section">
+        <dev class = "contact-top-section">
+             <p> interact Help & Support
+             </p>
+        </dev>
+    </dev>
+    <dev class = "contact-main-section">
+        <dev class = "contact-top-section-description" style="height:200px;"> 
+            <p>
+                Our prefered method for standard issues is to open an issue on the
+                <a href="https://github.com/QuantSysBio/interact-ms/issues">interact-ms github</a>
+                page. This is a public forum that allows others to learn if you have made
+                a mistake and allows our developers to track problems on our side.
+                <br></br>
+                If you are working with sensitive data and are nervous about posting on
+                a public forum or if you are interested in on site support or collaboration
+                you can contact us via email on qsb.support@mpinat.mpg.de or just directly fill the form below with your queries / comments.
+            </p>
+
+    
+        </dev>
+    </dev>
+
+    {{ INTERACT_FOOTER|safe }}
+</body>
+</html>

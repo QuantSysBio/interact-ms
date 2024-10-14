@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel='stylesheet' type="text/css" href="{{ url_for('static',filename='styles/style.css') }}">
+	<script src="{{url_for('static', filename='index.js')}}"></script>
+	<title>interact-ms</title>
+</head>
+<body>
+	<dev class = "page-wrapper">
+	
+		<!-- header -->
+		{{ INTERACT_HEADER|safe }}
+
+		<div class = "download-div">
+			 <div style=" width:1404px; text-align: center; background: linear-gradient(to right, aquamarine 40%, #FFFFFF 58%); ">
+				<p>Downloads </p>
+			</div>
+		</div>
+		<br><br><br>
+		<p style = " font-size:x-large; text-align:center; align-items: center;"><b>Download all outputs here as a zip file.</b></p>
+	
+		<div class = "vertical-center"> 
+			<a  href="http://{{ server_address }}:5000/interact/download/{{ user }}/{{ project }}">
+				<button class="download-button">
+					Download
+				</button>
+			</a>
+
+		</div>
+		
+        {{ INTERACT_FOOTER|safe }}
+
+    </dev>
+</body>
+</html>
+
+

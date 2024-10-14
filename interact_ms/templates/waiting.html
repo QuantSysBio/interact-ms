@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel='stylesheet' type="text/css" href="{{ url_for('static',filename='styles/style.css') }}">
+	<script src="{{url_for('static', filename='index.js')}}"></script>
+	<title>interact-ms</title>
+	<meta http-equiv="refresh" content="30; url=http://{{ server_address }}:5000/interact/{{ user }}/{{ project }}/results">
+</head>
+<body>
+	<dev class = "page-wrapper">
+		<!-- header -->
+		{{ INTERACT_HEADER|safe }}
+		<hr>
+		<p class="adjusted-text">Your data is still processing, check again later.</p>
+		
+		<center>
+			<h2>Progress Log</h2>
+			{{ progress_html|safe }}
+		</center>
+		<div class="adjusted-text">
+			<p>If you have made a mistake and wish to cancel your job, click below.</p>
+			<div class="vertical-center">
+				<button id="execute-button" class="job-button" onclick="cancelPipeline('{{ server_address }}', '{{ user }}', '{{ project }}')">
+					Cancel Exectuions
+				</button>
+			</div>
+			<div id="cancelled-text"></div>
+		</div>
+		<br><br>
+
+		{{ INTERACT_FOOTER|safe }}
+	</dev>
+</body>
+</html>

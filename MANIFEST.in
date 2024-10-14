@@ -1,0 +1,3 @@
+graft interact_ms/static
+graft interact_ms/templates
+global-exclude *.pyc
