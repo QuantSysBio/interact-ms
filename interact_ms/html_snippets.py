@@ -6,7 +6,7 @@ INTERACT_HEADER = """
     <dev class  = "header">
         <dev class = "header-left">
             
-            <img src="http://{server_address}:5000/static/inSPIRE-logo-nobg.png"
+            <img src="http://{server_address}:5000/static/qsb-logo.png"
             class = "inSPIRE-logo-nobg" 
             width = "180px"
             onclick="goHome('{server_address}')"/>
