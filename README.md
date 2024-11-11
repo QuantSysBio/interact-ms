@@ -1,6 +1,6 @@
 # interact-ms
 
-Easy GUI/webserver access for mass spectrometry identification and analysis tools
+Easy GUI/webserver access for mass spectrometry identification and analysis tools, namely PEPSeek and inSPIRE.
 
 <img src="https://raw.githubusercontent.com/QuantSysBio/inSPIRE/master/img/inSPIRE-logo.png" alt="drawing" width="200"/>
 
