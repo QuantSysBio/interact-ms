@@ -448,7 +448,7 @@ def check_results(user, project, workflow):
         variant = core_config['variant']
     if variant == 'pathogen':
         pep_seek_visible = 'visible'
-        key_file = 'epitope/potentialEpitopeCandidates.xlsx'
+        key_file = 'PEPSeek/potentialEpitopeCandidates.xlsx'
     else:
         pep_seek_visible = 'hidden'
         key_file = 'inspire-report.html'
@@ -514,7 +514,7 @@ def get_results_file(user, project, workflow):
         if (contents := safe_fetch(f'{project_home}/{KEY_FILES[workflow]}')):
             if workflow == 'epitopeReport':
                 contents = contents.replace(
-                    f'{project_home}/outputFolder/epitope/spectralPlots.pdf',
+                    f'{project_home}/outputFolder/PEPSeek/spectralPlots.pdf',
                     f'http://{server_address}:5000/interact/get_results/{user}/{project}/epitopePlots',
                 )
 

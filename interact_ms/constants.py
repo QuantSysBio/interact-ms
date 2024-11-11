@@ -27,20 +27,20 @@ INTERMEDIATE_FILES = [
 ]
 
 KEY_FILES = {
-    'epitopePlots': 'outputFolder/epitope/spectralPlots.pdf',
-    'epitopeReport': 'outputFolder/epitope/inspire-epitope-report.html',
+    'epitopePlots': 'outputFolder/PEPSeek/spectralPlots.pdf',
+    'epitopeReport': 'outputFolder/PEPSeek/pepseek-report.html',
     'psms': 'outputFolder/finalPsmAssignments.csv',
     'peptides': 'outputFolder/finalPeptideAssignments.csv',
     'executionLog': 'execution_log.txt',
-    'PEPSeek': 'outputFolder/epitope.zip',
+    'PEPSeek': 'outputFolder/PEPSeek.zip',
     'performance': 'outputFolder/inspire-report.html',
     'quantification': 'outputFolder/quant.zip',
-    'quantReport': 'outputFolder/quant/inspire-quant-report.html',
+    'quantReport': 'outputFolder/quant/quant-report.html',
 }
 
 ZIP_PATHS = {
     'quantification': 'outputFolder/quant',
-    'PEPSeek': 'outputFolder/epitope',
+    'PEPSeek': 'outputFolder/PEPSeek',
 }
 
 TASKS_NAMES = [

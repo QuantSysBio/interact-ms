@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 from interact_ms.constants import QUEUE_PATH
 from interact_ms.utils import safe_job_id_fetch
 
-EPITOPE_CANDIDATE_ROUTE = 'outputFolder/epitope/potentialEpitopeCandidates.csv'
+EPITOPE_CANDIDATE_ROUTE = 'outputFolder/PEPSeek/potentialEpitopeCandidates.csv'
 NS_PERC_PSMS_PATH = 'outputFolder/non_spectral.percolator.psms.txt'
 NS_PERC_SEP_PSMS_PATH = 'outputFolder/non_spectral.percolatorSeparate.psms.txt'
 PERC_PSMS_PATH = 'outputFolder/final.percolator.psms.txt'
@@ -228,7 +228,7 @@ def deal_with_success(
     create_status_fig(project_home)
     progress_svg = safe_fetch(f'{project_home}/progress.svg')
     psm_fdr_svg = safe_fetch(f'{project_home}/outputFolder/img/psm_fdr_curve.svg')
-    ep_bar = safe_fetch(f'{project_home}/outputFolder/img/epitope_bar_plot.svg')
+    ep_bar = safe_fetch(f'{project_home}/outputFolder/img/PEPSeek_bar_plot.svg')
     quant_svg = safe_fetch(f'{project_home}/outputFolder/img/peptide_volcano.svg')
     if not quant_svg:
         quant_svg = safe_fetch(f'{project_home}/outputFolder/img/norm_correlation.svg')
