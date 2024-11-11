@@ -20,7 +20,7 @@ setup(
     packages=find_packages(),
     python_requires='>=3.11',
     install_requires=[
-        'inspirems==2.0rc6',
+        'inspirems==2.0rc8',
         'blinker==1.6.2',
         'click==8.1.3',
         'flask==2.3.2',
