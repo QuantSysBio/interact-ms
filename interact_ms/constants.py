@@ -29,6 +29,7 @@ INTERMEDIATE_FILES = [
 KEY_FILES = {
     'epitopePlots': 'outputFolder/PEPSeek/spectralPlots.pdf',
     'epitopeReport': 'outputFolder/PEPSeek/pepseek-report.html',
+    'hostReport': 'outputFolder/PEPSeek/pepseek-host-report.html',
     'psms': 'outputFolder/finalPsmAssignments.csv',
     'peptides': 'outputFolder/finalPeptideAssignments.csv',
     'executionLog': 'execution_log.txt',

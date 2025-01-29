@@ -54,6 +54,18 @@
 					</td>
 				</tr>
 			</table>
+			<div id="pepseek-filter-div">
+				<p style = "font-size: larger;">
+					<b>Filter epitope candidates based on:</b>
+				</p>
+				<table><tr>
+					<td>Peptide level probailities: </td>
+					<td><input type="checkbox" class="pepseekcheckbox" id="pepseekpep" name="pepseekpep" onclick="competingCheckboxes(this, 'pepseekcheckbox')"></td>
+				</tr><tr>
+					<td>PSM level probailities: </td>
+					<td><input type="checkbox" class="pepseekcheckbox" id="pepseekpsm" name="pepseekpsm" onclick="competingCheckboxes(this, 'pepseekcheckbox')"></td>
+				</tr></table>
+			</div>
 		
 		</div>
 		<div class = "parameter-second-section-right">

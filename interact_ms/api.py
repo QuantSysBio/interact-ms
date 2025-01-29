@@ -510,7 +510,7 @@ def get_results_file(user, project, workflow):
             return send_file(f'{project_home}/{KEY_FILES[workflow]}', **kwargs)
 
     # The following send html reports
-    if workflow in ('epitopeReport', 'performance', 'quantReport'):
+    if workflow in ('epitopeReport', 'hostReport', 'performance', 'quantReport'):
         if (contents := safe_fetch(f'{project_home}/{KEY_FILES[workflow]}')):
             if workflow == 'epitopeReport':
                 contents = contents.replace(

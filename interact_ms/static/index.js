@@ -313,9 +313,16 @@ async function checkFilePattern(serverAddress, user, project, file_type) {
         });
         metaDict = response['message'];
         if (Object.keys(metaDict).length !== 0) {
-            if (metaDict['runFragger'] == 1) {
+            if (metaDict['runFragger'] === 1) {
                 document.getElementById('search-required-selection').value = 'searchNeeded';
-                selectSearchType('searchNeeded', serverAddress, user, project)
+                selectSearchType('searchNeeded', serverAddress, user, project);
+                if ('fraggerUseContams' in metaDict) {
+                    if (metaDict['fraggerUseContams'] === 'no') {
+                        document.getElementById('contams_no').checked = true;
+                    } else {
+                        document.getElementById('contams_yes').checked = true;
+                    }
+                }
             } else {
                 selectSearchType('searchDone', serverAddress, user, project)
                 document.getElementById('search-required-selection').value = 'searchDone';
@@ -513,15 +520,23 @@ function selectSearchType(value, serverAddress, user, project) {
     switch(value){
         case 'searchDone':
             setElementDisplay(['search-engine-div']);
+            setElementDisplay(['msfragger-add-contams'], displayType='none');
             break;
         case 'searchNeeded':
             setElementDisplay(['search-engine-div'], displayType='none');
+            setElementDisplay(['msfragger-add-contams']);
+            if (document.getElementById('contams_no').checked === true) {
+                var fraggerUseContams = 'no'
+            } else {
+                var fraggerUseContams = 'yes'
+            }
             var configObject = {
                 'user': user,
                 'project': project,
                 'metadata_type': 'search',
                 'runFragger': 1,
                 'searchEngine': 'msfragger',
+                'fraggerUseContams': fraggerUseContams,
             };
             postJson(serverAddress, 'metadata', configObject);
             break;
@@ -538,6 +553,7 @@ function selectSearchEngine(value, serverAddress, user, project) {
     };
     postJson(serverAddress, 'metadata', configObject);
     setElementDisplay([ 'search-column-1', 'search-column-2', 'search-separator']);
+
 };
 
 /**
@@ -646,6 +662,15 @@ async function parametersCheck(serverAddress, user, project)
             document.getElementById('quantification-checkbox').checked = true;
         }
     }
+    if ('epitopeCutLevel' in metaDict) {
+        if (metaDict['epitopeCutLevel'] == 'peptide'){
+            document.getElementById('pepseekpep').checked = true;
+        } else {
+            document.getElementById('pepseekpsm').checked = true;
+        }
+    } else {
+        document.getElementById('pepseekpsm').checked = true;
+    }
     if ('useBindingAffinity' in metaDict) {
         if (metaDict['useBindingAffinity'] === 'asFeature') {
             document.getElementById('panfeature').checked = true;
@@ -691,6 +716,21 @@ async function parametersCheck(serverAddress, user, project)
             lastRow.cells[1].getElementsByClassName('config-value')[0].value = metaDict['additionalConfigs'][configKey];
             addConfigs();
           };
+    }
+
+    var response = await fetch(
+        'http://' + serverAddress + ':5000/interact/metadata/' + user + '/' + project + '/core',
+        {
+            method: 'GET',
+        }
+    ).then( response => {
+        return response.json();
+    });
+
+    if (response['message']['variant'] === 'pathogen') {
+        setElementVisibility(["pepseek-filter-div"])
+    } else if (response['message']['variant'] === 'pathogen') {
+        setElementVisibility(["pepseek-filter-div"], null)
     }
 }
 
@@ -839,6 +879,12 @@ function constructConfigObject(user, project) {
         configObject['alleles'] =  document.getElementById('netmhcpan-allele-input').value;
     };
 
+    if (document.getElementById('pepseekpep').checked){
+        configObject['epitopeCutLevel'] = 'peptide';
+    } else {
+        configObject['epitopeCutLevel'] = 'psm';
+    }
+
     //gets rows of table
     var configTable = document.getElementById('configs-table');
     var rowLength = configTable.rows.length;
@@ -902,7 +948,7 @@ function deleteRow(r)
     document.getElementById("configs-table").deleteRow(i);
 };
 
-function competingCheckboxes(checkbox, checkboxClass)
+async function competingCheckboxes(checkbox, checkboxClass, serverAddress = 'none', user='none', project='none', checkboxID='none',)
 // 
 {
     if (checkbox.checked){
@@ -912,9 +958,40 @@ function competingCheckboxes(checkbox, checkboxClass)
             box.checked = false;
         });
         checkbox.checked = true;
-        setElementDisplay(['netmhcpan-allele-div']);
+        if (checkboxClass === 'pancheckbox') {
+            setElementDisplay(['netmhcpan-allele-div']);
+        }
+        if (checkboxClass === 'contamscheckbox') {
+            if (checkboxID === 'contams_no') {
+                var fraggerUseContams = 'no'
+            } else {
+                var fraggerUseContams = 'yes'
+            }
+            var configObject = {
+                'user': user,
+                'project': project,
+                'metadata_type': 'search',
+                'runFragger': 1,
+                'searchEngine': 'msfragger',
+                'fraggerUseContams': fraggerUseContams,
+            };
+            postJson(serverAddress, 'metadata', configObject);
+        }
+        if (checkboxClass === 'contams_yes') {
+            var configObject = {
+                'user': user,
+                'project': project,
+                'metadata_type': 'search',
+                'runFragger': 1,
+                'searchEngine': 'msfragger',
+                'fraggerUseContams': 'yes',
+            };
+            postJson(serverAddress, 'metadata', configObject);
+        }
     }  else {
-        setElementDisplay(['netmhcpan-allele-div'], 'none');
+        if (checkboxClass === 'pancheckbox') {
+            setElementDisplay(['netmhcpan-allele-div'], 'none');
+        }
     }
 }
 

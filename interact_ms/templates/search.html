@@ -40,6 +40,20 @@
 			</form>
 		</div>
 		<br>	<br>	<br>
+		<div class="adjusted-text" id="msfragger-add-contams" style =  "margin-left: 100px; margin-top: 100px; display:none;">
+			<div id="msfragger-contam-div" style =  "margin-left: 100px; ">
+				<p style = "font-size: larger;">
+					<b>Add contaminants (MaxQuant contaminants):</b>
+				</p>
+				<table><tr>
+					<td>Yes (recommended): </td>
+					<td><input type="checkbox" class="contamscheckbox" id="contams_yes" name="contams_yes" onclick="competingCheckboxes(this, 'contamscheckbox', '{{ server_address }}', '{{ user }}', '{{ project }}', 'contams_yes')"></td>
+				</tr><tr>
+					<td>No: </td>
+					<td><input type="checkbox" class="contamscheckbox" id="contams_no" name="contams_no" onclick="competingCheckboxes(this, 'contamscheckbox', '{{ server_address }}', '{{ user }}', '{{ project }}', 'contams_no')"></td>
+				</tr></table>
+			</div>
+		</div>
 		<div class="upload-div" style = "align-items: center;">
 			<div id="all-search-div">
 

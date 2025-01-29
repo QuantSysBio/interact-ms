@@ -88,6 +88,11 @@ def prepare_inspire(config_dict, project_home, app_config):
 
     output_config['searchEngine'] = meta_dict.get('searchEngine', 'msfragger')
     inspire_settings['fragger'] = bool(meta_dict.get('runFragger', 1))
+    if inspire_settings['fragger']:
+        if meta_dict['fraggerUseContams'] == 'yes':
+            output_config['fraggerUseContams'] = True
+        else:
+            output_config['fraggerUseContams'] = False
 
     if 'useBindingAffinity' in config_dict:
         output_config['useBindingAffinity'] = config_dict['useBindingAffinity']
@@ -105,6 +110,9 @@ def prepare_inspire(config_dict, project_home, app_config):
                 f'{project_home}/search/'
             )
         ]
+
+    if 'epitopeCutLevel' in config_dict:
+        output_config['epitopeCutLevel'] = config_dict['epitopeCutLevel']
 
     output_config['scansFolder'] = f'{project_home}/ms'
 
