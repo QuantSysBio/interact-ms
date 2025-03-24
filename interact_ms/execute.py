@@ -24,18 +24,18 @@ from interact_ms.inspire_script import INSPIRE_SCRIPT
 
 
 
-def execute_job(app_config, project_home, config_dict):
+def execute_job(app_config, project_home, config_dict, tasks=None):
     """ Function to execute job, writes config file, a bash file with all
         required tasks, and then executes the bash file in the background.
     """
     job_settings = prepare_inspire(config_dict, project_home, app_config)
-    write_task_status(job_settings, project_home)
+    write_task_status(job_settings, project_home, tasks)
 
     # In case of rerunning, we should be careful not to reuse this file.
     if os.path.exists(f'{project_home}/outputFolder/formated_df.csv'):
         os.remove(f'{project_home}/outputFolder/formated_df.csv')
 
-    task_list = subset_tasks(job_settings)
+    task_list = subset_tasks(job_settings, tasks)
     inspire_script = INSPIRE_SCRIPT.format(
         home_key=app_config[INTERACT_HOME_KEY],
         project_home=project_home,
@@ -64,6 +64,9 @@ def prepare_inspire(config_dict, project_home, app_config):
     }
 
     inspire_settings['quantify'] = bool(config_dict['runQuantification'])
+    if inspire_settings['quantify']:
+        inspire_settings['skylinePrecursorCountFilter'] = int(config_dict['quantPrecCount'])
+        inspire_settings['skylineIdpCutOff'] = float(config_dict['quantIdp'])
 
     output_config = {
         'experimentTitle': config_dict['project'],
@@ -81,6 +84,9 @@ def prepare_inspire(config_dict, project_home, app_config):
         RESCORE_COMMAND_KEY: app_config[RESCORE_COMMAND_KEY],
         'technicalReplicates': config_dict['technicalReplicates'],
     }
+
+    if config_dict['datasetType'] == 'tryp':
+        output_config['enzyme'] = 'trypsin'
 
     meta_dict = read_meta(project_home, 'search')
     if not meta_dict:
@@ -120,6 +126,9 @@ def prepare_inspire(config_dict, project_home, app_config):
         output_config['rescoreMethod'] = 'percolatorSeparate'
     else:
         output_config['rescoreMethod'] = 'percolator'
+
+    if os.path.exists(f'{project_home}/search/fragger_params.template'):
+        output_config['fraggerParams'] = f'{project_home}/search/fragger_params.template'
 
     if os.path.exists(f'{project_home}/proteome'):
         proteome_files = os.listdir(f'{project_home}/proteome')

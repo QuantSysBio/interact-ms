@@ -21,8 +21,11 @@ def execute_taks(home_key, project_home, task_list, proc_id):
     '''
     task_list = task_list.split(',')
     config_file = '{project_home}/config.yml'
+    print(f'adding {task_list} to queue')
     add_to_queue(project_home, home_key)
+    print(f'added {task_list} to queue')
     check_queue(project_home, home_key)
+    print(f'check_queue {task_list} to queue')
     update_status(
         project_home,
         home_key,

@@ -39,6 +39,7 @@
 				</select>
 			</form>
 		</div>
+
 		<br>	<br>	<br>
 		<div class="adjusted-text" id="msfragger-add-contams" style =  "margin-left: 100px; margin-top: 100px; display:none;">
 			<div id="msfragger-contam-div" style =  "margin-left: 100px; ">
@@ -52,6 +53,28 @@
 					<td>No: </td>
 					<td><input type="checkbox" class="contamscheckbox" id="contams_no" name="contams_no" onclick="competingCheckboxes(this, 'contamscheckbox', '{{ server_address }}', '{{ user }}', '{{ project }}', 'contams_no')"></td>
 				</tr></table>
+			</div>
+
+
+			<div id="ms-fragger-details" style="display:none; margin-left: 100px; text-align: justify;">
+				<p style = "font-size: larger;">
+					<b>Advanced search configuration:</b>
+				</p>
+				<p>By default, the parameters used for the MSFragger search are set to use fixed carbamidomethylation
+					and variable oxidation. Enzyme will be set as either nonspecific or trypsin based on selection
+					at the configuration step. If you would like to change these parameters, please upload a parameter file,
+					otherwise, click proceed to continue. The default parameters file can be seen at:
+					<a href="https://github.com/QuantSysBio/interact-ms/">interact-ms Github page (utilities folder)</a>.
+				</p>
+				<br>
+				<input type="file" id="fragger-params-file-upload" class="ms-data-extra" style = "width:100%; font-size: large;" />
+				<br>
+				<input type="submit" class="ms-data-extra" style = "width:160px ; font-size: large;" onclick="uploadFiles('{{ server_address }}', '{{ user }}', '{{ project }}', 'fragger-params')" multiple="false">
+				<p id="fragger-params-waiting" style="display:none;">Files uploading...</p>
+				<progress id="progressBar2" value="0" max="100" style="width:300px;display:none"></progress>
+				<p id="loaded_n_total"></p>
+				<p id="fragger-params-no-files" style="display:none; color:red;">Please upload a file before proceeding.</p>
+
 			</div>
 		</div>
 		<div class="upload-div" style = "align-items: center;">

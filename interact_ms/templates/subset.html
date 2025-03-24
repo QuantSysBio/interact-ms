@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel='stylesheet' type="text/css" href="{{ url_for('static',filename='styles/style.css') }}">
+	<script src="{{url_for('static', filename='index.js')}}"></script>
+	<title>interact-ms</title>
+</head>
+<body>	
+	{{ INTERACT_HEADER|safe }}
+	<hr>
+	<br><br>
+	
+	
+	<!--Third Section -->
+	
+	<div style = "display:flex;
+				flex-direction: row;
+				justify-content: center;
+				align-items:center;">
+		<div class="parameter-third-section-left">
+
+			<div style=" width:1404px; text-align: left; margin-left:1%; ">
+					<p style = "font-size: larger;">
+						<b>Select subset of tasks to run or rerun.</b>
+					</p>
+			</div>
+
+			<div style=" width:1404px;  text-align: left; ">
+				<br><br>
+				<table id="raw-table" style="width: 100%;">
+				<br>
+					{{ html_table|safe }}
+				</table>
+	
+			</div>
+		</div>
+	</div>
+	
+	<br><br><br>
+	<!-- save and execution button -->
+
+	<div id="execution-div" class="container" style=" height:200px;">
+		<div class="vertical-center" style = "margin-top: 0%; height:200px;">
+			<button id="execute-button" class=" ms-data-extra" style = " border-radius: 10px;cursor:pointer; font-size:x-large;width:250px; margin-left: 40px; height:90px; margin-right: 40px;" onclick="executeSubsetPipeline('{{ server_address }}', '{{ user }}', '{{ project }}')">
+				Execute Pipeline
+			</button>
+		</div>
+	</div>
+
+	<div style = "display:flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items:center;">
+		<div class="parameter-third-section-right">
+			<div id="params-save-text" class = "ms-data-extra" style="display: none; font-size: larger; padding-left:2%; padding-right:2%;">
+				<p>Parameters saved</p>
+			</div>
+		</div>
+		<div class="parameter-third-section-right">
+			<div id="loading-text" class = "ms-data-extra" style="display: none; font-size: larger; padding-left:2%; padding-right:2%;">
+				<p>Just a moment, we are setting up your pipeline</p>
+			</div>
+		</div>
+		<div id="file-download-text" class='ms-data-extra' style="display: none; font-size: larger; padding-left:2%; padding-right:2%;">
+			<p>Pipeline running. Results will be accessible via:</p>
+			<a id="file-download" href></a>
+			<p>You can also access the results from the main interact page by selecting the workflow "Retrieve Results".
+			</p>
+		</div>
+		<br><br>
+	</div>
+
+	<div style="display:flex; justify-content:center; align-items:center; font-size: larger; ">
+		<div style="width:200px;">
+			<button id="back-button" class="ms-data-extra-button"onclick="revertGUI('{{ server_address }}', '{{ user }}', '{{ project }}', 'parameters')">
+				&xlarr; Go back
+			</button>
+		</div>
+	</div>
+	<div style = "height: 100px;"></div>
+	{{ INTERACT_FOOTER|safe }}
+</body>
+</html>

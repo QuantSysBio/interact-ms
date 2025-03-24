@@ -232,7 +232,11 @@ async function uploadFiles(serverAddress, user, project, mode) {
     );
 
     // add progress event to find the progress of file upload 
-    ajax.upload.addEventListener("progress", progressHandler);
+    if (mode == 'fragger-params') {
+        ajax.upload.addEventListener("progress", progressHandler2);
+    } else {
+        ajax.upload.addEventListener("progress", progressHandler);
+    }
 
     // initializes a newly-created request 
     ajax.open(
@@ -242,7 +246,7 @@ async function uploadFiles(serverAddress, user, project, mode) {
 
     ajax.onreadystatechange = () => {
         // Call a function when the state changes.
-        if (ajax.readyState === XMLHttpRequest.DONE && ajax.status === 200) {
+        if (ajax.readyState === XMLHttpRequest.DONE && ajax.status === 200 && mode !== 'fragger-params') {
             checkFilePattern(serverAddress, user, project, mode);
             waitingTextElem.style.display = "none";
         }
@@ -265,6 +269,19 @@ function progressHandler(ev) {
 
 };
 
+function progressHandler2(ev) {    
+    let totalSize = Math.round((ev.total/1000000000 + Number.EPSILON) * 1000)/1000; // total size of the file in bytes
+    let loadedSize = Math.round((ev.loaded/1000000000 + Number.EPSILON) * 1000)/1000; // loaded size of the file in bytes    
+
+    document.getElementById("loaded_n_total").innerHTML = "Uploaded " + loadedSize + " GB of " + totalSize + " GB.";
+
+    // calculate percentage 
+    var percent = (ev.loaded / ev.total) * 100;
+    document.getElementById("progressBar2").style.display="";
+    document.getElementById("progressBar2").value = Math.round(percent);
+
+};
+
 function checkPreconditions(mode, files) {
     let noFilesText = document.getElementById(mode + "-no-files");
 
@@ -284,6 +301,9 @@ function checkPreconditions(mode, files) {
  * @param {*} file_type 
  */
 async function checkFilePattern(serverAddress, user, project, file_type) {
+    if (file_type === 'fragger-params') {
+        return 
+    }
     document.getElementById(file_type + "-file-list").innerHTML = "";
 
     var response = await fetch(
@@ -478,6 +498,14 @@ function setElementDisplay(ids, displayType = 'block') {
     });
 }
 
+function revealElement(checkbox, divToShow) {
+    if (checkbox.checked) {
+        document.getElementById(divToShow).style.display = 'block';
+    } else {
+        document.getElementById(divToShow).style.display = 'none';
+    };
+}
+
 /**
  * Sets the visibility of elements with the given ids to the desired visibilityType.
  * 
@@ -524,6 +552,7 @@ function selectSearchType(value, serverAddress, user, project) {
             break;
         case 'searchNeeded':
             setElementDisplay(['search-engine-div'], displayType='none');
+            setElementDisplay(['ms-fragger-details']);
             setElementDisplay(['msfragger-add-contams']);
             if (document.getElementById('contams_no').checked === true) {
                 var fraggerUseContams = 'no'
@@ -657,9 +686,13 @@ async function parametersCheck(serverAddress, user, project)
     if ('mzUnits' in metaDict) {
         document.getElementById('ms2-unit-selection').value = metaDict['mzUnits'];
     }
+    if ('datasetType' in metaDict) {
+        document.getElementById('dataset-type-selection').value = metaDict['datasetType'];
+    }
     if ('runQuantification' in metaDict) {
         if (metaDict['runQuantification']){
             document.getElementById('quantification-checkbox').checked = true;
+            revealElement(document.getElementById('quantification-checkbox'), 'quantification-div');
         }
     }
     if ('epitopeCutLevel' in metaDict) {
@@ -670,6 +703,16 @@ async function parametersCheck(serverAddress, user, project)
         }
     } else {
         document.getElementById('pepseekpsm').checked = true;
+    }
+    if ('quantIdp' in metaDict) {
+        document.getElementById('quant-idp').value = metaDict['quantIdp'];
+    } else {
+        document.getElementById('quant-idp').value = '0.5';
+    }
+    if ('quantPrecCount' in metaDict) {
+        document.getElementById('quant-prec-count').value = metaDict['quantPrecCount'];
+    } else {
+        document.getElementById('quant-prec-count').value = '3';
     }
     if ('useBindingAffinity' in metaDict) {
         if (metaDict['useBindingAffinity'] === 'asFeature') {
@@ -714,6 +757,15 @@ async function parametersCheck(serverAddress, user, project)
             var lastRow = table.rows[ table.rows.length - 1 ];
             lastRow.cells[0].getElementsByClassName('config-key')[0].value = configKey
             lastRow.cells[1].getElementsByClassName('config-value')[0].value = metaDict['additionalConfigs'][configKey];
+            addConfigs();
+          };
+    } else {
+        const defaultKeys = ['remapToProteome'];
+        for (var defaultKey of defaultKeys) {
+            var table = document.getElementById('configs-table');
+            var lastRow = table.rows[ table.rows.length - 1 ];
+            lastRow.cells[0].getElementsByClassName('config-key')[0].value = defaultKey
+            lastRow.cells[1].getElementsByClassName('config-value')[0].value = 'True';
             addConfigs();
           };
     }
@@ -830,7 +882,7 @@ function constructConfigObject(user, project) {
     let ms1Accuracy = document.getElementById('ms1-accuracy-input').value;
     let mzAccuracy = document.getElementById('ms2-accuracy-input').value;
     let mzUnits = document.getElementById('ms2-unit-selection').value;
-
+    let datasetType = document.getElementById('dataset-type-selection').value;
 
     var table = document.getElementById("raw-table");
     var file_name = "";
@@ -866,6 +918,7 @@ function constructConfigObject(user, project) {
         'ms1Accuracy': ms1Accuracy,
         'mzAccuracy': mzAccuracy,
         'mzUnits': mzUnits,
+        'datasetType': datasetType,
         'controlFlags': controlFlags,
         'technicalReplicates': Object.values(technicalReplicates)
     };
@@ -902,12 +955,23 @@ function constructConfigObject(user, project) {
         }
     }
 
-    configObject['runQuantification'] = (
-        document.getElementById('quantification-checkbox'
-    ).checked) ? 1 : 0;
+    if (document.getElementById('quantification-checkbox').checked){
+        configObject['runQuantification'] = true;
+        configObject['quantIdp'] = document.getElementById('quant-idp').value;
+        configObject['quantPrecCount'] = document.getElementById('quant-prec-count').value;
+    } else {
+        configObject['runQuantification'] = false;
+    }
     configObject['additionalConfigs'] = additionalConfigs;
     return configObject;
 }
+async function subsetPipeline(serverAddress, user, project) {
+    configObject = constructConfigObject(user, project);
+    configObject['metadata_type'] = 'parameters';
+    
+    await postJson(serverAddress, 'metadata', configObject);
+    window.location.href = 'http://' + serverAddress + ':5000/interact-page/subset/' + user + '/' + project;  
+};
 
 async function executePipeline(serverAddress, user, project) {
 
@@ -924,6 +988,51 @@ async function executePipeline(serverAddress, user, project) {
 
     configObject['metadata_type'] = 'parameters';
     postJson(serverAddress, 'metadata', configObject);
+
+    makeDownloadVisible(response['message']);
+
+};
+
+async function constructSubsetObject(serverAddress, user, project) {
+    console.log('http://' + serverAddress + ':5000/interact/tasks_included/' + user  + '/' + project);
+    var response = await fetch(
+        'http://' + serverAddress + ':5000/interact/tasks_included/' + user  + '/' + project,
+        {
+            method: 'GET',
+        }
+    ).then( response => {
+    
+        return response.json();
+    });
+    includedTasks = [];
+    for (task of response["message"]['tasks']) {
+        if (document.getElementById(task + '_included').checked) {
+            includedTasks.push(task);
+        }
+    };
+    console.log(includedTasks);
+    var subsetObject = {
+        'user': user,
+        'project': project,
+        'includedTasks': includedTasks
+    };
+    console.log(subsetObject);
+    return subsetObject;
+};
+
+async function executeSubsetPipeline(serverAddress, user, project) {
+
+    let paramSaveElem = document.getElementById("params-save-text");
+    paramSaveElem.style.display = "none";
+    document.getElementById('execute-button').disabled = "disabled";
+    
+    let loadingElem = document.getElementById("loading-text");
+    loadingElem.style.display = "block";
+    console.log('here');
+
+    var subsetObject = await constructSubsetObject(serverAddress, user, project);
+
+    var response = await postJson(serverAddress, 'execute', subsetObject);
 
     makeDownloadVisible(response['message']);
 
