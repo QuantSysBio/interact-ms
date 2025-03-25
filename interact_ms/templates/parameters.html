@@ -14,6 +14,19 @@
 		   <p>Configuration</p>
 	   </div>
 	</div>
+
+	<div class = "parameter-first-section">
+		Select the type of dataset in use:
+		<div id="dataset-type-entry"  style="margin-left:0;">
+			<form id="dataset-type-form">
+				<select id="dataset-type-selection" style = "margin-left:2px; border:2px solid  rgb(5, 208, 141); width:250px; height:40px; font-size: medium;" >
+					<option value="ip">immunopeptidome</option>
+					<option value="tryp">tryptic proteome</option>
+				</select>
+			</form>
+		</div>
+		<br>
+	</div>
 	
 	<div class = "parameter-second-section">
 		<div class = "parameter-second-section-left">
@@ -50,21 +63,19 @@
 						Run Quantification? (only possible if RAW files have been uploaded).
 					</td>
 					<td>
-						<input type="checkbox" id="quantification-checkbox" name="quantification">
+						<input type="checkbox" id="quantification-checkbox" name="quantification" onclick="revealElement(this, 'quantification-div')">
 					</td>
 				</tr>
 			</table>
-			<div id="pepseek-filter-div">
-				<p style = "font-size: larger;">
-					<b>Filter epitope candidates based on:</b>
-				</p>
+			<div id="quantification-div" style="width:600; margin-left:0; display:none">
 				<table><tr>
-					<td>Peptide level probailities: </td>
-					<td><input type="checkbox" class="pepseekcheckbox" id="pepseekpep" name="pepseekpep" onclick="competingCheckboxes(this, 'pepseekcheckbox')"></td>
+					<td>Isotope Dot Product Cut Off</td>
+					<td><input type="text" id="quant-idp" style = "width:96%; border:2px solid  rgb(5, 208, 141); "  name="quant-idp" onkeypress="textSubmit(event, '{{ server_address }}', 'noAction')"></td>
 				</tr><tr>
-					<td>PSM level probailities: </td>
-					<td><input type="checkbox" class="pepseekcheckbox" id="pepseekpsm" name="pepseekpsm" onclick="competingCheckboxes(this, 'pepseekcheckbox')"></td>
+					<td>Precursor Count Cut Off</td>
+					<td><input type="text" id="quant-prec-count" style = "width:96%; border:2px solid  rgb(5, 208, 141); "  name="quant-prec-count" onkeypress="textSubmit(event, '{{ server_address }}', 'noAction')"></td>
 				</tr></table>
+				<br>
 			</div>
 		
 		</div>
@@ -87,6 +98,20 @@
 				</form>
 				<br>
 			</div>
+
+
+			<div id="pepseek-filter-div">
+				<p style = "font-size: larger;">
+					<b>Filter epitope candidates based on:</b>
+				</p>
+				<table><tr>
+					<td>Peptide level probailities: </td>
+					<td><input type="checkbox" class="pepseekcheckbox" id="pepseekpep" name="pepseekpep" onclick="competingCheckboxes(this, 'pepseekcheckbox')"></td>
+				</tr><tr>
+					<td>PSM level probailities: </td>
+					<td><input type="checkbox" class="pepseekcheckbox" id="pepseekpsm" name="pepseekpsm" onclick="competingCheckboxes(this, 'pepseekcheckbox')"></td>
+				</tr></table>
+			</div>
 				
 	
 		</div>
@@ -102,7 +127,7 @@
 				justify-content: center;
 				align-items:center;">
 		<div class="parameter-third-section-left">
-	
+
 			<div style=" width:1404px; text-align: left; margin-left:1%; ">
 					<p style = "font-size: larger;">
 						<b>File Specific Information</b>
@@ -138,6 +163,7 @@
 				(Optional) Additional configurations (these are only required for specialised use cases
 				see configuration options on
 				<a href="https://github.com/QuantSysBio/inSPIRE#inspire-config-file">our GitHub page</a>).
+				We suggest setting remapToProteome to True.
 			</div>
 
 			<div style=" width:1304px;  text-align: left; margin-right:25px; ">
@@ -171,8 +197,12 @@
 				Save Parameters
 			</button>
 			<br><br>
-			<button id="execute-button" class=" ms-data-extra" style = " border-radius: 10px;cursor:pointer; font-size:x-large;width:250px; margin-left: 40px; height:90px" onclick="executePipeline('{{ server_address }}', '{{ user }}', '{{ project }}')">
+			<button id="execute-button" class=" ms-data-extra" style = " border-radius: 10px;cursor:pointer; font-size:x-large;width:250px; margin-left: 40px; height:90px; margin-right: 40px;" onclick="executePipeline('{{ server_address }}', '{{ user }}', '{{ project }}')">
 				Execute Pipeline
+			</button>
+			<br><br>
+			<button id="subset-button" class=" ms-data-extra" style = " border-radius: 10px;cursor:pointer; font-size:x-large;width:250px; margin-left: 40px; height:90px" onclick="subsetPipeline('{{ server_address }}', '{{ user }}', '{{ project }}')">
+				Execute Subset of Tasks
 			</button>
 		</div>
 	</div>

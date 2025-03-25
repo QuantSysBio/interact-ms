@@ -53,6 +53,17 @@
     background-color: aquamarine;
 }
 
+.parameter-first-section{
+    background-color: white;
+    display:flex;
+    height:20px;
+    flex-direction: row;
+    justify-content: center;
+    align-items:center;
+    margin-bottom: 40px;
+    margin-top: 100px;
+}
+
 .parameter-second-section{
     background-color: white;
     display:flex;

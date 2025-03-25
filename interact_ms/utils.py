@@ -19,6 +19,54 @@ from interact_ms.html_snippets import (
     INTERACT_HEADER,
 )
 
+def get_task_list(user, project, app, variant):
+    home_key= app.config[INTERACT_HOME_KEY]
+    project_home = f'{home_key}/projects/{user}/{project}'
+
+    params_config = read_meta(project_home, 'parameters')
+    print(params_config)
+    search_config = read_meta(project_home, 'search')
+
+
+    tasks = deepcopy(TASKS_NAMES)
+    print(variant, tasks)
+
+    if not search_config['runFragger']:
+        tasks = [task for task in tasks if task != 'fragger']
+    if params_config['useBindingAffinity'] not in ['asValidation', 'asFeature']:
+        tasks = [task for task in tasks if task != 'predictBinding']
+    if variant != 'pathogen':
+        tasks = [task for task in tasks if task != 'extractCandidates']
+    if not params_config['runQuantification']:
+        tasks = [task for task in tasks if task != 'quantify']
+    print(variant, tasks)
+    return tasks
+
+def generate_subset_table(user, project, app, variant):
+    """ Function to create a html table with raw file, biological sample input
+        and (if required) checkbox for file is infected or not
+    """
+    html_table = '''
+        <tr align="center" valign="center">
+            <td><b>Task</b></td>
+            <td><b>Task Description</b></td>
+            <td><b>Run Task</b></td>
+        </tr>
+    '''
+    tasks = get_task_list(user, project, app, variant)
+    for task in tasks:
+        html_table += f'''
+            <tr align="center" valign="center" text-align="left">
+            <td>{task}</td>
+			<td>{TASK_DESCRIPTIONS[task]}</td>
+            <td>
+                <input type="checkbox" class="infection-checkbox" style="align: center" id="{task}_included" name="{task}_included">
+            </td>
+        '''
+        html_table += '</tr>'
+
+    return html_table
+
 def generate_raw_file_table(user, project, app, variant):
     """ Function to create a html table with raw file, biological sample input
         and (if required) checkbox for file is infected or not
@@ -121,25 +169,26 @@ def check_pids(project_home):
     return 'done'
 
 
-def subset_tasks(settings):
+def subset_tasks(settings, tasks=None):
     """ Function to subset all possible tasks to fetch
         the ones relevant for a given job.
     """
-    tasks = deepcopy(TASKS_NAMES)
-    if not settings['fragger']:
-        tasks = [task for task in tasks if task != 'fragger']
-    if not settings['binding']:
-        tasks = [task for task in tasks if task != 'predictBinding']
-    if not settings['pathogen']:
-        tasks = [task for task in tasks if task != 'extractCandidates']
-    if not settings['quantify']:
-        tasks = [task for task in tasks if task != 'quantify']
+    if tasks is None:
+        tasks = deepcopy(TASKS_NAMES)
+        if not settings['fragger']:
+            tasks = [task for task in tasks if task != 'fragger']
+        if not settings['binding']:
+            tasks = [task for task in tasks if task != 'predictBinding']
+        if not settings['pathogen']:
+            tasks = [task for task in tasks if task != 'extractCandidates']
+        if not settings['quantify']:
+            tasks = [task for task in tasks if task != 'quantify']
     return tasks
 
-def write_task_status(settings, project_home):
+def write_task_status(settings, project_home, tasks=None):
     """ Function to write the task status DataFrame. 
     """
-    tasks = subset_tasks(settings)
+    tasks = subset_tasks(settings, tasks)
     task_names = [TASK_DESCRIPTIONS[task] for task in tasks]
     task_df = pd.DataFrame({
         'taskId': tasks,

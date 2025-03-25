@@ -59,7 +59,7 @@ TASKS_NAMES = [
 TASK_DESCRIPTIONS = {
     'convert': 'Converting MS Data',
     'fragger': 'Executing MSFragger',
-    'prepare': 'Preparing results',
+    'prepare': 'Preparing initial PSMs',
     'predictSpectra': 'Predicting spectra',
     'predictBinding': 'Predicting binding',
     'featureGeneration': 'Generating features',

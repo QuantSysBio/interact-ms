@@ -44,8 +44,10 @@ from interact_ms.handle_results import (
 from interact_ms.execute import execute_job
 from interact_ms.utils import (
     check_pids,
-    generate_raw_file_table,
     format_header_and_footer,
+    generate_raw_file_table,
+    generate_subset_table,
+    get_task_list,
     read_meta,
 )
 
@@ -144,6 +146,17 @@ def fetch_page(page, user, project):
     if page == 'proteome':
         page += f'-{variant}'
     try:
+        if page == 'subset':
+            html_table = generate_subset_table(user, project, app, variant)
+            return render_template(
+                f'{page}.html',
+                server_address=app.config[SERVER_ADDRESS_KEY],
+                user=user,
+                project=project,
+                variant=variant,
+                html_table=html_table,
+                **header_and_footer,
+            )
         if page == 'parameters':
             html_table = generate_raw_file_table(user, project, app, variant)
             return render_template(
@@ -177,6 +190,16 @@ def create_project(user, project):
         os.mkdir(f'{app.config[INTERACT_HOME_KEY]}/projects/{user}/{project}')
     return jsonify(message='Ok')
 
+@app.route('/interact/tasks_included/<user>/<project>', methods=['GET'])
+@cross_origin()
+def get_tasks(user, project):
+    """ Function to check which tasks are included in the workflow.
+    """
+    project_home = f'{app.config[INTERACT_HOME_KEY]}/projects/{user}/{project}'
+    variant = read_meta(project_home, 'core')['variant']
+    tasks = get_task_list(user, project, app, variant)
+    print(tasks)
+    return jsonify(message={'tasks': tasks})
 
 @app.route('/interact/upload/<user>/<project>/<file_type>', methods=['POST'])
 @cross_origin()
@@ -221,6 +244,11 @@ def upload_file(user, project, file_type):
             u_file.save(
                 f'{upload_home}/{renamed_file}'
             )
+    elif file_type == 'fragger-params':
+        upload_home = f'{home_key}/projects/{user}/{project}/search'
+        uploaded_files[0].save(
+            f'{upload_home}/fragger_params.template'
+        )
     else:
         # For raw files we preserve name
         for u_file in uploaded_files:
@@ -371,9 +399,20 @@ def run_interact_job():
     """ Run execute a pipeline run.
     """
     config_dict = request.json
+    print(config_dict)
     user = config_dict['user']
     project = config_dict['project']
-
+    if 'includedTasks' in config_dict:
+        tasks = config_dict['includedTasks']
+        config_dict = read_meta(
+            f'{app.config[INTERACT_HOME_KEY]}/projects/{user}/{project}',
+            'parameters',
+        )
+        config_dict['user'] = user
+        config_dict['project'] = project
+    else:
+        tasks = None
+    
     project_home = f'{app.config[INTERACT_HOME_KEY]}/projects/{user}/{project}'
     response = jsonify(
         message=f'http://{app.config[SERVER_ADDRESS_KEY]}:5000/interact/{user}/{project}/results'
@@ -384,7 +423,7 @@ def run_interact_job():
         if check_pids(project_home) == 'waiting':
             return response
 
-        execute_job(app.config, project_home, config_dict)
+        execute_job(app.config, project_home, config_dict, tasks)
 
     except Exception as err:
         return jsonify(message=f'interact-ms failed with error code: {err}')
