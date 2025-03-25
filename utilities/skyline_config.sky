@@ -22,13 +22,13 @@
     </peptide_settings>
     <transition_settings>
       <transition_prediction precursor_mass_type="Monoisotopic" fragment_mass_type="Monoisotopic" optimize_by="None" />
-      <transition_filter precursor_charges="1,2,3,4,5,6" product_charges="1" precursor_adducts="[M+H]" product_adducts="[M+]" fragment_types="p" small_molecule_fragment_types="p" fragment_range_first="m/z &gt; precursor" fragment_range_last="3 ions" precursor_mz_window="0" auto_select="true">
+      <transition_filter precursor_charges="1,2,3,4,5,6" product_charges="1" precursor_adducts="[M+H]" product_adducts="[M+]" fragment_types="p" small_molecule_fragment_types="" fragment_range_first="m/z &gt; precursor" fragment_range_last="3 ions" precursor_mz_window="0" auto_select="true">
         <measured_ion name="N-terminal to Proline" cut="P" sense="N" min_length="3" />
       </transition_filter>
       <transition_libraries ion_match_tolerance="0.5" min_ion_count="0" ion_count="3" pick_from="all" />
       <transition_integration />
       <transition_instrument min_mz="200" max_mz="2000" mz_match_tolerance="0.055" />
-      <transition_full_scan acquisition_method="DDA" product_mass_analyzer="orbitrap" product_res="60000" product_res_mz="400" precursor_isotopes="Count" precursor_isotope_filter="2" precursor_mass_analyzer="orbitrap" precursor_res="30000" precursor_res_mz="400" selective_extraction="true" retention_time_filter_type="ms2_ids" retention_time_filter_length="0.5">
+      <transition_full_scan acquisition_method="DDA" product_mass_analyzer="orbitrap" product_res="60000" product_res_mz="400" precursor_isotopes="Count" precursor_isotope_filter="{precursor_ion_filter}" precursor_mass_analyzer="orbitrap" precursor_res="30000" precursor_res_mz="400" selective_extraction="true" retention_time_filter_type="ms2_ids" retention_time_filter_length="0.5">
         <isotope_enrichments name="Default">
           <atom_percent_enrichment symbol="H'">0.98</atom_percent_enrichment>
           <atom_percent_enrichment symbol="C'">0.995</atom_percent_enrichment>
