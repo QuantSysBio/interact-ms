@@ -26,8 +26,10 @@ setup(
         'flask==2.3.2',
         'flask_cors==3.0.10',
         'itsdangerous==2.1.2',
+        'MarkupSafe==2.1.3',
         'psutil==5.9.6',
         'Werkzeug==3.0.1',
+        'six==1.16.0',
     ],
     project_urls={
         'Homepage': 'https://github.com/QuantSysBio/interact-ms',
