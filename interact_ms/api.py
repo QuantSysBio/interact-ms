@@ -21,6 +21,7 @@ from interact_ms.clean_up import (
 from interact_ms.constants import (
     ALL_CONFIG_KEYS,
     CPUS_KEY,
+    EXTRA_PROT_KEY,
     FRAGGER_MEMORY_KEY,
     FRAGGER_PATH_KEY,
     KEY_FILES,
@@ -41,7 +42,8 @@ from interact_ms.handle_results import (
     fetch_queue_and_task,
     safe_fetch,
 )
-from interact_ms.execute import execute_job
+from interact_ms.execute import execute_invitro_job, execute_job
+from interact_ms.execute_pisces import execute_pisces, prepare_pisces
 from interact_ms.utils import (
     check_pids,
     format_header_and_footer,
@@ -144,7 +146,16 @@ def fetch_page(page, user, project):
         variant = core_config['variant']
 
     if page == 'proteome':
+        if variant in ('standard', 'pisces'):
+            page += '-standard'
+        else:
+            page += f'-{variant}'
+    elif page == 'parameters' and variant == 'invitro':
         page += f'-{variant}'
+    elif page == 'search':
+        if variant == 'pisces':
+            page += '-pisces'
+
     try:
         if page == 'subset':
             html_table = generate_subset_table(user, project, app, variant)
@@ -198,7 +209,6 @@ def get_tasks(user, project):
     project_home = f'{app.config[INTERACT_HOME_KEY]}/projects/{user}/{project}'
     variant = read_meta(project_home, 'core')['variant']
     tasks = get_task_list(user, project, app, variant)
-    print(tasks)
     return jsonify(message={'tasks': tasks})
 
 @app.route('/interact/upload/<user>/<project>/<file_type>', methods=['POST'])
@@ -207,6 +217,12 @@ def upload_file(user, project, file_type):
     """ Function to create a new user project.
     """
     home_key= app.config[INTERACT_HOME_KEY]
+    pisces_flag = False
+    if file_type in ['search-pisces-db', 'search-pisces-dn']:
+        pisces_flag = True
+        pisces_type = file_type.split('-')[-1]
+        file_type = 'search'
+
     upload_home = f'{home_key}/projects/{user}/{project}/{file_type}'
 
     if not os.path.isdir(f'{home_key}/projects/{user}/{project}/{file_type}'):
@@ -214,10 +230,19 @@ def upload_file(user, project, file_type):
 
     uploaded_files = request.files.getlist("files")
 
-    if file_type == 'proteome':
+    if file_type == 'proteome-invitro':
+        uploaded_files[0].save(
+            f'{upload_home}/protSeq.fasta'
+        )
+
+        uploaded_files[1].save(
+            f'{upload_home}/contams.fasta'
+        )
+    elif file_type == 'proteome':
         uploaded_files[0].save(
             f'{upload_home}/proteome_{uploaded_files[0].filename}'
         )
+        
     elif file_type == 'proteome-select':
         uploaded_files[0].save(
             f'{upload_home}/host_{uploaded_files[0].filename}'
@@ -238,12 +263,30 @@ def upload_file(user, project, file_type):
                     for line in source_file:
                         total_file.write(line)
     elif file_type == 'search':
-        # For search if there are multiple msms.txt, etc, we avoid overwriting
-        for idx, u_file in enumerate(uploaded_files):
-            renamed_file = f'{str(idx+1)}_' + u_file.filename.replace(" ", "_")
-            u_file.save(
-                f'{upload_home}/{renamed_file}'
-            )
+        if pisces_flag:
+            n_files = len(uploaded_files)
+            if pisces_type == 'db':
+                for idx in range(n_files):
+                    uploaded_files[idx].save(
+                        f'{upload_home}/dbSearch_{idx}.csv'
+                    )
+            else:
+                for idx in range(n_files):
+                    if uploaded_files[idx].filename.endswith('.csv'):
+                        uploaded_files[idx].save(
+                            f'{upload_home}/deNovo_{idx}.csv'
+                        )
+                    else:
+                        uploaded_files[idx].save(
+                            f'{upload_home}/{uploaded_files[idx].filename}'
+                        )
+        else:
+            # For search if there are multiple msms.txt, etc, we avoid overwriting
+            for idx, u_file in enumerate(uploaded_files):
+                renamed_file = f'{str(idx+1)}_' + u_file.filename.replace(" ", "_")
+                u_file.save(
+                    f'{upload_home}/{renamed_file}'
+                )
     elif file_type == 'fragger-params':
         upload_home = f'{home_key}/projects/{user}/{project}/search'
         uploaded_files[0].save(
@@ -281,6 +324,11 @@ def upload_metadata():
 def get_metadata(user, project, metadata_type):
     """ Function for checking which files match a particular file pattern provided.
     """
+    if metadata_type == 'pisces-cryptic':
+        print(app.config.get(EXTRA_PROT_KEY, {}))
+        return jsonify(
+            message=app.config.get(EXTRA_PROT_KEY, {})
+        )
     project_home = f'{app.config[INTERACT_HOME_KEY]}/projects/{user}/{project}'
     meta_dict = read_meta(project_home, metadata_type)
     return jsonify(message=meta_dict)
@@ -295,6 +343,8 @@ def check_file_pattern(file_type):
     user = config_data['user']
     project = config_data['project']
     project_home = f'{app.config[INTERACT_HOME_KEY]}/projects/{user}/{project}'
+    if file_type in ['search-pisces', 'search-pisces-db', 'search-pisces-dn']:
+        file_type = 'search'
 
     if not os.path.exists(f'{project_home}/{file_type}'):
         os.mkdir(f'{project_home}/{file_type}')
@@ -313,6 +363,9 @@ def clear_file_pattern(file_type):
     config_data = request.json
     user = config_data['user']
     project = config_data['project']
+    if file_type == 'search-pisces':
+        file_type = 'search'
+
     shutil.rmtree(
         f'{app.config[INTERACT_HOME_KEY]}/projects/{user}/{project}/{file_type}'
     )
@@ -399,21 +452,17 @@ def run_interact_job():
     """ Run execute a pipeline run.
     """
     config_dict = request.json
-    print(config_dict)
     user = config_dict['user']
     project = config_dict['project']
+    project_home = f'{app.config[INTERACT_HOME_KEY]}/projects/{user}/{project}'
     if 'includedTasks' in config_dict:
         tasks = config_dict['includedTasks']
-        config_dict = read_meta(
-            f'{app.config[INTERACT_HOME_KEY]}/projects/{user}/{project}',
-            'parameters',
-        )
+        config_dict = read_meta(project_home, 'parameters')
         config_dict['user'] = user
         config_dict['project'] = project
     else:
         tasks = None
-    
-    project_home = f'{app.config[INTERACT_HOME_KEY]}/projects/{user}/{project}'
+
     response = jsonify(
         message=f'http://{app.config[SERVER_ADDRESS_KEY]}:5000/interact/{user}/{project}/results'
     )
@@ -423,7 +472,15 @@ def run_interact_job():
         if check_pids(project_home) == 'waiting':
             return response
 
-        execute_job(app.config, project_home, config_dict, tasks)
+        variant = read_meta(project_home, 'core')['variant']
+        if variant == 'invitro':
+            execute_invitro_job(app.config, project_home, config_dict, tasks)
+        elif variant == 'pisces':
+            execute_pisces(app.config, project_home, config_dict, tasks)
+        else:
+            execute_job(app.config, project_home, config_dict, tasks)
+
+        
 
     except Exception as err:
         return jsonify(message=f'interact-ms failed with error code: {err}')
@@ -475,22 +532,25 @@ def check_results(user, project, workflow):
             )
 
         return deal_with_queue(
-            app.config[INTERACT_HOME_KEY],
-            project_home,
-            server_address,
-            header_and_footer,
+            app.config[INTERACT_HOME_KEY], project_home, server_address,
+            user, project, header_and_footer,
         )
 
     # Task complete : either in success or failure.
-    with open(f'projects/{user}/{project}/core_metadata.yml', 'r', encoding='UTF-8') as stream:
-        core_config = yaml.safe_load(stream)
-        variant = core_config['variant']
+    variant = read_meta(project_home, 'core')['variant']
+
     if variant == 'pathogen':
         pep_seek_visible = 'visible'
         key_file = 'PEPSeek/potentialEpitopeCandidates.xlsx'
-    else:
+    elif variant == 'invitro':
+        pep_seek_visible = 'hidden'
+        key_file = 'filtered_finalAssignments.csv'
+    elif variant == 'standard':
         pep_seek_visible = 'hidden'
         key_file = 'inspire-report.html'
+    else:
+        pep_seek_visible = 'hidden'
+        key_file = 'pisces-report.html'
 
     if os.path.exists(f'{project_home}/outputFolder/{key_file}'):
         return deal_with_success(
@@ -499,6 +559,7 @@ def check_results(user, project, workflow):
             user,
             project,
             workflow,
+            variant,
             pep_seek_visible,
             header_and_footer,
         )
@@ -522,7 +583,7 @@ def get_results_file(user, project, workflow):
     project_home = f'{home_key}/projects/{user}/{project}'
 
     # The quantification results require a zip archive
-    if workflow in ('quantification', 'PEPSeek'):
+    if workflow in ('quantification', 'PEPSeek', 'piscesFinal', 'piscesDetails'):
         if os.path.exists(f'{project_home}/{ZIP_PATHS[workflow]}.zip'):
             os.remove(f'{project_home}/{ZIP_PATHS[workflow]}.zip')
 
@@ -531,7 +592,11 @@ def get_results_file(user, project, workflow):
             'zip',
             f'{project_home}/{ZIP_PATHS[workflow]}',
         )
-
+    key_file = KEY_FILES[workflow]
+    core_config = read_meta(project_home, 'core')
+    variant = core_config['variant']
+    if variant == 'invitro' and workflow == 'peptides':
+        key_file = 'outputFolder/filtered_finalAssignments.csv'
     # The following results require the relevant results file to be sent:
     if workflow in (
         'epitopePlots',
@@ -539,22 +604,36 @@ def get_results_file(user, project, workflow):
         'peptides',
         'executionLog',
         'PEPSeek',
-        'quantification'
+        'quantification',
+        'piscesFinal',
+        'piscesDetails',
+        'piscesPlots',
+        'piscesMetrics',
     ):
-        if os.path.exists(f'{project_home}/{KEY_FILES[workflow]}'):
+        if os.path.exists(f'{project_home}/{key_file}'):
             kwargs = {}
-            if KEY_FILES[workflow].endswith('.zip'):
+            if key_file.endswith('.zip'):
                 kwargs['mimetype'] = 'zip'
                 kwargs['as_attachment'] = True
-            return send_file(f'{project_home}/{KEY_FILES[workflow]}', **kwargs)
+            return send_file(f'{project_home}/{key_file}', **kwargs)
 
     # The following send html reports
-    if workflow in ('epitopeReport', 'hostReport', 'performance', 'quantReport'):
+    if workflow in (
+        'epitopeReport', 'hostReport', 'performance', 'quantReport',
+        'invitroPlots', 'piscesReport', 'piscesQcReport',
+    ):
+        if workflow == 'invitroPlots':
+            return send_from_directory(project_home, KEY_FILES[workflow])
         if (contents := safe_fetch(f'{project_home}/{KEY_FILES[workflow]}')):
             if workflow == 'epitopeReport':
                 contents = contents.replace(
                     f'{project_home}/outputFolder/PEPSeek/spectralPlots.pdf',
                     f'http://{server_address}:5000/interact/get_results/{user}/{project}/epitopePlots',
+                )
+            if workflow == 'piscesQcReport':
+                contents = contents.replace(
+                    f'{project_home}/outputFolder/nonCanonicalPlots.pdf',
+                    f'http://{server_address}:5000/interact/get_results/{user}/{project}/piscesPlots',
                 )
 
             return contents
@@ -591,6 +670,9 @@ def main():
         if config_key not in ALL_CONFIG_KEYS:
             raise ValueError(f'Unrecognised key {config_key} found in config file.')
 
+    for config_key in ALL_CONFIG_KEYS:
+        app.config[config_key] = config_dict.get(config_key, None)
+
     app.config[INTERACT_HOME_KEY] = os.getcwd()
     app.config[INTERACT_HOME_KEY] = app.config[INTERACT_HOME_KEY].replace(
         '\\', '/'
@@ -621,6 +703,7 @@ def main():
     app.config[CPUS_KEY] = config_dict.get(CPUS_KEY, 1)
     app.config[SKYLINE_RUNNER_KEY] = config_dict.get(SKYLINE_RUNNER_KEY)
     app.config[RESCORE_COMMAND_KEY] = config_dict.get(RESCORE_COMMAND_KEY, 'percolator')
+    app.config['apptainerImage'] = config_dict.get('apptainerImage')
     if app.config[SKYLINE_RUNNER_KEY] is not None:
          app.config[SKYLINE_RUNNER_KEY] = app.config[SKYLINE_RUNNER_KEY].replace(
             '\\', '/'

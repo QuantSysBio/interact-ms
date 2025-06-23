@@ -21,8 +21,40 @@ from interact_ms.utils import (
     check_pids, write_task_status, read_meta, subset_tasks,
 )
 from interact_ms.inspire_script import INSPIRE_SCRIPT
+from interact_ms.inspire_invitro_script import INSPIRE_INVITRO_SCRIPT
 
+def execute_invitro_job(app_config, project_home, config_dict, tasks=None):
+    """ Function to execute job, writes config file, a bash file with all
+        required tasks, and then executes the bash file in the background.
+    """
+    # print('los')
+    # os.system(
+    #     f'mkdir -p {project_home}/outputFolder && cp -rp /data/John/interact-1.1/inspire_invitro {project_home}/outputFolder'
+    # )
+    job_settings = prepare_invitro_inspire(config_dict, project_home, app_config)
+    write_task_status(job_settings, project_home, tasks)
 
+    task_list = subset_tasks(job_settings, tasks, 'invitro')
+    print(task_list)
+    inspire_script = INSPIRE_INVITRO_SCRIPT.format(
+        home_key=app_config[INTERACT_HOME_KEY],
+        project_home=project_home,
+        task_list=','.join(task_list),
+        apptainer_image=app_config['apptainerImage'],
+        spliced_upper_limit=job_settings['splicedUpperLimit'],
+    )
+    script_path = f'{project_home}/inspire_script.py'
+    with open(script_path, mode='w', encoding='UTF-8') as script_file:
+        script_file.writelines(inspire_script)
+
+    os.popen(
+        f'{sys.executable} {script_path} > {project_home}/execution_log.txt 2>&1'
+    )
+    for idx in range(3):
+        if check_pids(project_home) == 'waiting':
+            break
+
+        time.sleep(idx+1)
 
 def execute_job(app_config, project_home, config_dict, tasks=None):
     """ Function to execute job, writes config file, a bash file with all
@@ -51,9 +83,84 @@ def execute_job(app_config, project_home, config_dict, tasks=None):
     for idx in range(3):
         if check_pids(project_home) == 'waiting':
             break
-        
+
         time.sleep(idx+1)
 
+def prepare_invitro_inspire(config_dict, project_home, app_config):
+    """ Function to prepare the inSPIRE run.
+    """
+    fragger_config = {
+        'baseDir': project_home,
+        'folder': f'{project_home}/ms',
+        'ms1_accuracy': float(config_dict['ms1Accuracy']),
+        'ms2_accuracy': float(config_dict['mzAccuracy']),
+        'ms2_units': config_dict['mzUnits'],
+        'contaminantsDatabase': f'{project_home}/proteome-invitro/contams.fasta',
+        'substrateSequence': f'{project_home}/proteome-invitro/protSeq.fasta',
+        'splicedDatabase': f'{project_home}/proteome-invitro/allPSP.fasta',
+        'nTopCandidates': 20,
+        'nSplits': 50,
+        'fraggerMemory': app_config['fraggerMemory'],
+        'fraggerPath': app_config['fraggerPath'],
+    }
+    with open(f'{project_home}/config_fragger.yml', 'w', encoding='UTF-8') as yaml_out:
+        yaml.dump(fragger_config, yaml_out)
+
+    inspire_config = {
+        'accessionFormat': 'invitroSPI',
+        'dropUnknownPTMs': True,
+        'experimentTitle': project_home.split('/')[-1],
+        'mzAccuracy': float(config_dict['mzAccuracy']),
+        'mzUnits': config_dict['mzUnits'],
+        'outputFolder': '/mnt/outputFolder',
+        'proteome': '/mnt/proteome-invitro/protSeq.fasta',
+        'reduce': 'no',
+        'rescoreMethod': 'percolatorSeparate',
+        'deltaMethod': 'ignore',
+        'reuseInput': True,
+        'scansFolder': '/mnt/ms',
+        'scansFormat': 'mgf',
+        'searchEngine': 'msfragger',
+        'searchResults': [
+            '/mnt/ms/cleaved/*.pepXML',
+            '/mnt/ms/spliced/*.pepXML',
+        ],
+        'silentExecution': True,
+        'useAccessionStrata': True,
+        'useMinimalFeatures': True,
+        'nCores': 5,
+        'includeFeatures':[
+            'spectralAngle', 'deltaRT', 'spearmanR',
+        ],
+        'resultsExport': 'peptide',
+    }
+    with open(f'{project_home}/config.yml', 'w', encoding='UTF-8') as yaml_out:
+        yaml.dump(inspire_config, yaml_out)
+
+    contams_config = {
+        'deltaMethod': 'ignore',
+        'dropUnknownPTMs': True,
+        'experimentTitle': f'{project_home.split("/")[-1]}_contams',
+        'mzAccuracy': float(config_dict['mzAccuracy']),
+        'mzUnits': config_dict['mzUnits'],
+        'outputFolder': '/mnt/contamsOutputFolder',
+        'reduce': 'no',
+        'rescoreMethod': 'percolatorSeparate',
+        'reuseInput': True,
+        'scansFolder': '/mnt/ms',
+        'scansFormat': 'mgf',
+        'searchEngine': 'msfragger',
+        'searchResults': [
+            '/mnt/ms/contams/*.pepXML',
+        ],
+        'silentExecution': True,
+        'useMinimalFeatures': True,
+        'nCores': 5,
+    }
+    with open(f'{project_home}/config_contam.yml', 'w', encoding='UTF-8') as yaml_out:
+        yaml.dump(contams_config, yaml_out)
+
+    return {'variant': 'invitro', 'splicedUpperLimit': int(config_dict['splicedUpperLimit'])}
 
 def prepare_inspire(config_dict, project_home, app_config):
     """ Function to prepare the inSPIRE run.

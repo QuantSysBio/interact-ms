@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel='stylesheet' type="text/css" href="{{ url_for('static',filename='styles/style.css') }}">
+	<script src="{{url_for('static', filename='index.js')}}"></script>
+	<title>interact-ms</title>
+</head>
+<body onload="checkFilePattern('{{ server_address }}', '{{ user }}', '{{ project }}', 'search-pisces')">	
+	<!-- main page-->
+	<dev class = "page-wrapper">
+		<!-- header -->
+		{{ INTERACT_HEADER|safe }}
+		<hr>
+        <br><br>
+		<div class = "download-div">
+			<div style=" width:1404px; padding-left: 30px; text-align: left; background: linear-gradient(to right, aquamarine 40%, #FFFFFF 58%); ">
+			   <p>Initial Search</p>
+		   </div>
+	   </div>
+
+		<div class="upload-div" style = "align-items: center;">
+			<div id="all-search-div">
+
+				<!-- SEARCH DIV -->
+				<div id="search-div" class="row">
+					<div class="row">
+						<div id="search-column-1" style="margin-left: 0%;">
+								<p>Have you already run a database search or do you want to run MSFragger within interact-ms?</p>
+								<form id="search-run-div" >
+									<select autocomplete="off" style = "width:300px; height: 30px; font-size: large; border:2px solid  rgb(5, 208, 141);  " onchange="selectSearchType(this.value, '{{ server_address }}', '{{ user }}', '{{ project }}', 'pisces')" id="search-required-selection">
+										<option selected disabled hidden>Select Option</option>
+										<option value="searchDone">I have search results.</option>
+										<option value="searchNeeded">I need to run MSFragger.</option>
+									</select>
+								</form>
+
+								<form id="search-engine-div" style="display:none;">
+									<p>Which search engine did you use?</p>
+									<select autocomplete="off"  id="search-engine-selection" style = "width:300px; height: 30px; font-size: large; border:2px solid  rgb(5, 208, 141);" onchange="selectSearchEngine(this.value, '{{ server_address }}', '{{ user }}', '{{ project }}', 'pisces')">
+										<option selected disabled hidden>Select Search Engine Used</option>
+										<option value="msfragger">MSFragger</option>
+										<option value="peaks">PEAKS DB</option>
+									</select>
+								</form>
+								<div id="pisces-db-upload" style="display: none;">
+								<p>Upload your database search results.</p>
+								<br>
+								<input type="file" id="search-pisces-db-file-upload" class="ms-data-extra" multiple="true" />
+								<br>							<br>
+								<input type="submit" class="ms-data-extra" style = "width:160px ; font-size: large;" onclick="uploadFiles('{{ server_address }}', '{{ user }}', '{{ project }}', 'search-pisces-db')">
+								<p id="search-pisces-db-waiting" style="display:none;">Files uploading...</p>
+								<br>
+								<progress id="progressBar" value="0" max="100" style="width:300px;display:none"></progress>
+								<p id="loaded_n_total"></p>
+								<p id="search-pisces-db-no-files" style="display:none; color:red;">Please upload a file before proceeding.</p>	
+								</div>
+							<form id="dn-engine-div">
+								<p>Have you already run a de novo search or do you want to run Casanovo as part of PISCES?</p>
+								<form id="dn-run-div" >
+									<select autocomplete="off" style = "width:300px; height: 30px; font-size: large; border:2px solid  rgb(5, 208, 141);  " onchange="selectDeNovoType(this.value, '{{ server_address }}', '{{ user }}', '{{ project }}')" id="dn-required-selection">
+										<option selected disabled hidden>Select Option</option>
+										<option value="deNovoDone">I have already run a <i>de novo</i> method.</option>
+										<option value="deNovoNeeded">I need to run Casanovo.</option>
+									</select>
+								</form>
+							</form>
+							<div id="de-novo-upload-div" style="display: none;">
+								<p>Which de novo engine did you use?</p>
+								<select autocomplete="off"  id="dn-engine-selection" style = "width:300px; height: 30px; font-size: large; border:2px solid  rgb(5, 208, 141);" onchange="selectDeNovoEngine(this.value, '{{ server_address }}', '{{ user }}', '{{ project }}')">
+									<option selected disabled hidden>Select DeNovo Engine</option>
+									<option value="casanovo">Casanovo</option>
+									<option value="peaks">PEAKS <i>de novo</i></option>
+								</select>
+
+								<p>Upload your de novo results.</p>
+								<br>
+								<input type="file" id="search-pisces-dn-file-upload" class="ms-data-extra" style = "width:100%; font-size: large;"  multiple="true" />
+								<br>
+								<br>
+								<input type="submit" class="ms-data-extra" style = "width:160px ; font-size: large;" onclick="uploadFiles('{{ server_address }}', '{{ user }}', '{{ project }}', 'search-pisces-dn')">
+								<p id="search-pisces-dn-waiting" style="display:none;">Files uploading...</p>
+								<br>
+								<progress id="progressBar2" value="0" max="100" style="width:300px;display:none"></progress>
+								<p id="loaded_n_total2"></p>
+								<p id="search-pisces-dn-no-files" style="display:none; color:red;">Please upload a file before proceeding.</p>
+
+							</div>
+							
+						</div>
+						
+						<div class="vl" id="search-separator" style="margin-right:40px"></div>
+
+						<div id="search-column-2" style="margin-left: 0%;">
+							<p>Or check the currently uploaded files.</p>
+							<p>DB Search Files:</p>
+							<ul id="search-pisces-db-file-list"></ul>
+							<p><i>De Novo</i> Files:</p>
+							<ul id="search-pisces-dn-file-list"></ul>
+							<p>
+								If you have uploaded incorrect files and need to delete them, click below:
+							</p>
+							<input autocomplete="off"  type="submit" value="Delete All Files" class="ms-data-extra" style = "width:180px ; font-size: large;" onclick="clearFilePattern('{{ server_address }}', '{{ user }}', '{{ project }}', 'search-pisces')">
+							<p>
+								If you updated files manually, refresh the file list here
+							</p>
+							<input autocomplete="off"  type="submit" value="Refresh File List" class="ms-data-extra" style = "width:180px ; font-size: large;" onclick="checkFilePattern('{{ server_address }}', '{{ user }}', '{{ project }}', 'search-pisces')">
+						</div>
+					</div>
+				</div>
+			</div>
+			<br>
+		</div>
+		<br>	<br>	<br>
+
+		<div style = " display:flex; justify-content:center; align-items:center; font-size: larger; ">
+			<div style = "width:200px; margin-left: 60px;">
+				<button id="back-button" class="ms-data-extra-button"  onclick="revertGUI('{{ server_address }}', '{{ user }}', '{{ project }}', 'search')">
+					&xlarr; Go back
+				</button>
+			</div>
+			<div style = "width:200px;">
+				<button id="forward-button" class="ms-data-extra-button"  onclick="forwardGUI('{{ server_address }}', '{{ user }}', '{{ project }}', 'search')">
+					Proceed &xrarr;
+				</button>
+			</div>
+		</div>
+		<div style = "height: 100px" > </div>
+
+		{{ INTERACT_FOOTER|safe }}
+	</dev>
+</body>
+</html>

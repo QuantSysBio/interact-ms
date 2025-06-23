@@ -1,12 +1,11 @@
 """ Script for running inSPIRE as a string to be formatted.
 """
 
-INSPIRE_SCRIPT = """
+INSPIRE_INVITRO_SCRIPT = """
 import os
 import sys
 import traceback
-
-from inspire.run import run_inspire
+import subprocess
 
 from interact_ms.queue_manager import (
     add_to_queue,
@@ -32,13 +31,29 @@ def execute_taks(home_key, project_home, task_list, proc_id):
 
     for task in task_list:
         try:
-            run_inspire(task, config_file)
-            status = '0'
+            if task == 'runMSFragger':
+                sub_proc = subprocess.run([
+                    'python', f'{project_home}/outputFolder/inspire_invitro/run_ms_fragger.py', '--config_file', f'{project_home}/config_fragger.yml',
+                ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            else:
+                sub_proc = subprocess.run([
+                    'apptainer', 'run', f'--bind', f'{project_home}:/mnt',
+                    f'{apptainer_image}', task, '{spliced_upper_limit}'
+                ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            print('hey', sub_proc.stdout)
+            print('ok', sub_proc.stdout.decode('utf-8'))
+            try:
+                print('ok', sub_proc.stderr.decode('utf-8'))
+            except:
+                print('stderr is empty')
+            status = sub_proc.returncode
+            print(status, type(status))
         except Exception as e:
             print('interact-ms failed on task ' + task  + 'with Exception:' + str(e))
             print(traceback.format_exc())
             status = '1'
 
+        status = str(status)
         update_status(
             project_home,
             home_key,

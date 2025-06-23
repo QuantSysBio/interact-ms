@@ -10,6 +10,10 @@ import yaml
 
 from interact_ms.constants import (
     INTERACT_HOME_KEY,
+    INVITRO_TASKS,
+    INVITRO_TASK_DESCRIPTIONS,
+    PISCES_TASK_DESCRIPTIONS,
+    PISCES_TASK_NAMES,
     SERVER_ADDRESS_KEY,
     TASKS_NAMES,
     TASK_DESCRIPTIONS,
@@ -20,20 +24,28 @@ from interact_ms.html_snippets import (
 )
 
 def get_task_list(user, project, app, variant):
+
     home_key= app.config[INTERACT_HOME_KEY]
     project_home = f'{home_key}/projects/{user}/{project}'
 
+    if variant == 'invitro':
+        return INVITRO_TASKS
+    elif variant == 'pisces':
+        tasks = deepcopy(PISCES_TASK_NAMES)
+        dn_config = read_meta(project_home, 'denovo')
+    else:
+        tasks = deepcopy(TASKS_NAMES)
+
     params_config = read_meta(project_home, 'parameters')
-    print(params_config)
     search_config = read_meta(project_home, 'search')
 
-
-    tasks = deepcopy(TASKS_NAMES)
-    print(variant, tasks)
-
-    if not search_config['runFragger']:
-        tasks = [task for task in tasks if task != 'fragger']
-    if params_config['useBindingAffinity'] not in ['asValidation', 'asFeature']:
+    if variant == 'pisces':
+        if not dn_config.get('runCasa', False):
+            tasks = [task for task in tasks if task != 'runCasa']
+        
+        if params_config.get('piscesSelection') != 'assembly':
+            tasks = [task for task in tasks if task != 'translateGenome']
+    if params_config.get('useBindingAffinity') not in ['asValidation', 'asFeature']:
         tasks = [task for task in tasks if task != 'predictBinding']
     if variant != 'pathogen':
         tasks = [task for task in tasks if task != 'extractCandidates']
@@ -54,11 +66,17 @@ def generate_subset_table(user, project, app, variant):
         </tr>
     '''
     tasks = get_task_list(user, project, app, variant)
+    if variant == 'invitro':
+        descriptions = INVITRO_TASK_DESCRIPTIONS
+    elif variant == 'pisces':
+        descriptions = PISCES_TASK_DESCRIPTIONS
+    else:
+        descriptions = TASK_DESCRIPTIONS
     for task in tasks:
         html_table += f'''
             <tr align="center" valign="center" text-align="left">
             <td>{task}</td>
-			<td>{TASK_DESCRIPTIONS[task]}</td>
+			<td>{descriptions[task]}</td>
             <td>
                 <input type="checkbox" class="infection-checkbox" style="align: center" id="{task}_included" name="{task}_included">
             </td>
@@ -169,27 +187,45 @@ def check_pids(project_home):
     return 'done'
 
 
-def subset_tasks(settings, tasks=None):
+def subset_tasks(settings, tasks=None, mode=None):
     """ Function to subset all possible tasks to fetch
         the ones relevant for a given job.
     """
     if tasks is None:
-        tasks = deepcopy(TASKS_NAMES)
-        if not settings['fragger']:
+        if mode == 'invitro':
+            return INVITRO_TASKS
+        elif mode == 'pisces':
+            tasks = deepcopy(PISCES_TASK_NAMES)
+        else:
+            tasks = deepcopy(TASKS_NAMES)
+
+        if settings.get('useCase') != 'proteomeAssembly':
+            tasks = [task for task in tasks if task != 'translateGenome']
+        if not settings.get('runCasa', False):
+            tasks = [task for task in tasks if task != 'runCasa']
+        if not settings.get('fragger', False):
             tasks = [task for task in tasks if task != 'fragger']
-        if not settings['binding']:
+        if not settings.get('binding', False):
             tasks = [task for task in tasks if task != 'predictBinding']
-        if not settings['pathogen']:
+        if not settings.get('pathogen', False):
             tasks = [task for task in tasks if task != 'extractCandidates']
-        if not settings['quantify']:
+        if not settings.get('quantify', False):
             tasks = [task for task in tasks if task != 'quantify']
     return tasks
 
 def write_task_status(settings, project_home, tasks=None):
     """ Function to write the task status DataFrame. 
     """
-    tasks = subset_tasks(settings, tasks)
-    task_names = [TASK_DESCRIPTIONS[task] for task in tasks]
+    print(f'{tasks=}')
+    tasks = subset_tasks(settings, tasks, settings.get('variant'))
+    if settings.get('variant') == 'invitro':
+        task_names = [INVITRO_TASK_DESCRIPTIONS[task] for task in tasks]
+    elif settings.get('variant') == 'pisces':
+        task_names = [PISCES_TASK_DESCRIPTIONS[task] for task in tasks]
+    else:
+        task_names = [TASK_DESCRIPTIONS[task] for task in tasks]
+    print(f'{tasks=}')
+    print(f'{task_names=}')
     task_df = pd.DataFrame({
         'taskId': tasks,
         'taskName': task_names

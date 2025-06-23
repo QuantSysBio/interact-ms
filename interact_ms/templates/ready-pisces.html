@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel='stylesheet' type="text/css" href="{{ url_for('static',filename='styles/style.css') }}">
+	<script src="{{url_for('static', filename='index.js')}}"></script>
+	<title>interact-ms</title>
+</head>
+<body>
+	<dev class = "page-wrapper">
+	<!-- header -->
+	{{ INTERACT_HEADER|safe }}
+	<hr>
+	<table class="results-table">
+
+		<div class="res-row">
+			<div style="margin-left: 15%; padding-right:6%; width:500px;" class="res-column">
+				<h2>PISCES Identification Results</h2>
+				Click to download a zip file of
+				<a href="http://{{ server_address }}:5000/interact/get_results/{{ user }}/{{ project }}/piscesFinal">
+					PISCES identifications by stratum</a> and details of the
+				<a href="http://{{ server_address }}:5000/interact/get_results/{{ user }}/{{ project }}/piscesDetails">
+					protein mappings</a> or view the
+					<a href="http://{{ server_address }}:5000/interact/get_results/{{ user }}/{{ project }}/piscesReport">
+					PISCES report</a>.
+				<br>
+				<br>
+				{{ psm_fdr_svg|safe }}
+				<br>
+			</div>
+			<div class="res-column" style="width: 500px;">
+				<h2>PISCES Quality Control</h2>
+				Click to download identification metrics for 
+				<a href="http://{{ server_address }}:5000/interact/get_results/{{ user }}/{{ project }}/piscesMetrics">
+					non-canonical peptides</a>,
+				or view the
+					<a href="http://{{ server_address }}:5000/interact/get_results/{{ user }}/{{ project }}/piscesQcReport">
+					PISCES QC report</a>.
+				<br>
+				<br>
+				{{ spec_angle_svg|safe }}
+				<br>
+			</div>
+		</div>
+
+		<div class="res-row">
+
+			<div id="res-column" style="margin-left: 15%; ; padding-right:6%; width:500px;"  class="res-column">
+					<h2>PISCES Execution Logs</h2>
+				<p>Here you can see the details of the execution</p>
+				<a href="http://{{ server_address }}:5000/interact/get_results/{{ user }}/{{ project }}/executionLog"> Click to download the log of PISCES execution</a>
+				or
+				<a href="http://{{ server_address }}:5000/interact-page/parameters/{{ user }}/{{ project }}">click to re-execute the pipeline with alternative parameters.</a>
+				<br>
+				<br>
+				{{ progress_svg|safe }}
+			</div>
+		</div>
+
+
+	</table>
+	<br><br>
+
+	{{ INTERACT_FOOTER|safe }}
+
+	</dev>
+</body>
+</html>

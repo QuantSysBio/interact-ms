@@ -9,7 +9,7 @@ Easy GUI/webserver access for mass spectrometry identification and analysis tool
 
 ### Before Downloading
 
-We recommend working with interact-ms through conda. On windows systems you may also need
+We recommend working with interact-ms through conda.
 
 ### Setting up your environment:
 
@@ -24,7 +24,7 @@ conda create --name interact_ms python=3.11 -c conda-forge
 2) Activate this environment
 
 ```
-conda activate interact_ms
+conda activate interact_ms_11
 ```
 
 3) You will then need to install the interact-ms package (this also installs inSPIRE and PEPSeek):
