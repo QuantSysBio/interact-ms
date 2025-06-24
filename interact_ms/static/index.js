@@ -608,17 +608,21 @@ function selectSearchType(value, serverAddress, user, project, variant='standard
             setElementDisplay(['search-engine-div']);
             if (variant === 'standard') {
                 setElementDisplay(['msfragger-add-contams'], displayType='none');
-            }
+            };
             break;
         case 'searchNeeded':
             setElementDisplay(['search-engine-div'], displayType='none');
-            setElementDisplay(['ms-fragger-details']);
-            setElementDisplay(['msfragger-add-contams']);
-            if (document.getElementById('contams_no').checked === true) {
-                var fraggerUseContams = 'no'
+            if (variant === 'standard') {
+                setElementDisplay(['ms-fragger-details']);
+                setElementDisplay(['msfragger-add-contams']);
+                if (document.getElementById('contams_no').checked === true) {
+                    var fraggerUseContams = 'no'
+                } else {
+                    var fraggerUseContams = 'yes'
+                }
             } else {
-                var fraggerUseContams = 'yes'
-            }
+                var fraggerUseContams = 'no';
+            };
             var configObject = {
                 'user': user,
                 'project': project,
