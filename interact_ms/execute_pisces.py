@@ -12,6 +12,8 @@ from interact_ms.constants import (
     CONTAM_FOLDER_KEY,
     CPUS_KEY,
     EXTRA_PROT_KEY,
+    FRAGGER_MEMORY_KEY,
+    FRAGGER_PATH_KEY,
     INTERACT_HOME_KEY,
     MHCPAN_KEY,
     RESCORE_COMMAND_KEY,
@@ -68,24 +70,18 @@ def prepare_pisces(config_dict, project_home, app_config):
     pisces_settings['quantify'] = bool(config_dict['runQuantification'])
 
 
-    if (
-        os.path.exists(f'{project_home}/search/dbSearch.csv') or
-        os.path.exists(f'{project_home}/search/dbSearch_0.csv')
-    ):
-        db_search_result = [f'{project_home}/search/dbSearch*.csv']
-    else:
-        db_search_result = None
 
 
     output_config = {
         'experimentTitle': config_dict['project'],
-        'dbSearchResults': db_search_result,
-        'scansFolder': f'{project_home}/ms',
-        'scansFormat': 'mgf',
-        'outputFolder': f'{project_home}/outputFolder',
+        'fraggerPath': app_config[FRAGGER_PATH_KEY],
+        'fraggerMemory': app_config[FRAGGER_MEMORY_KEY],
         'mzAccuracy': float(config_dict['mzAccuracy']),
         'mzUnits': config_dict['mzUnits'],
         'nCores': app_config[CPUS_KEY],
+        'outputFolder': f'{project_home}/outputFolder',
+        'scansFolder': f'{project_home}/ms',
+        'scansFormat': 'mgf',
         SLURM_SCRIPT_KEY: app_config[SLURM_SCRIPT_KEY],
         CONTAM_FOLDER_KEY: app_config[CONTAM_FOLDER_KEY],
         'additionalConfigs': {
@@ -100,6 +96,16 @@ def prepare_pisces(config_dict, project_home, app_config):
         db_search_config = yaml.safe_load(stream)
         output_config['dbSearchEngine'] = db_search_config['searchEngine']
         output_config['runDbSearch'] = bool(db_search_config['runFragger'])
+
+    if (
+        os.path.exists(f'{project_home}/search/dbSearch.csv') or
+        os.path.exists(f'{project_home}/search/dbSearch_0.csv')
+    ):
+        output_config['dbSearchResults'] = [f'{project_home}/search/dbSearch*.csv']
+    elif bool(db_search_config['runFragger']):
+        output_config['dbSearchResults'] = [f'{project_home}/ms/*.pepXML']
+    else:
+        output_config['dbSearchResults'] = None
 
     with open(f'{project_home}/denovo_metadata.yml', 'r', encoding='UTF-8') as stream:
         dn_config = yaml.safe_load(stream)
