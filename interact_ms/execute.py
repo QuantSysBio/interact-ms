@@ -42,6 +42,7 @@ def execute_invitro_job(app_config, project_home, config_dict, tasks=None):
         task_list=','.join(task_list),
         apptainer_image=app_config['apptainerImage'],
         spliced_upper_limit=job_settings['splicedUpperLimit'],
+        apptainer_or_singularity=app_config['containerMethod'],
     )
     script_path = f'{project_home}/inspire_script.py'
     with open(script_path, mode='w', encoding='UTF-8') as script_file:

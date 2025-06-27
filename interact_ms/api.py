@@ -325,9 +325,11 @@ def get_metadata(user, project, metadata_type):
     """ Function for checking which files match a particular file pattern provided.
     """
     if metadata_type == 'pisces-cryptic':
-        print(app.config.get(EXTRA_PROT_KEY, {}))
+        extra_prot_folders = app.config.get(EXTRA_PROT_KEY)
+        if extra_prot_folders is None:
+            extra_prot_folders = {}
         return jsonify(
-            message=app.config.get(EXTRA_PROT_KEY, {})
+            message=extra_prot_folders
         )
     project_home = f'{app.config[INTERACT_HOME_KEY]}/projects/{user}/{project}'
     meta_dict = read_meta(project_home, metadata_type)
@@ -703,6 +705,7 @@ def main():
     app.config[CPUS_KEY] = config_dict.get(CPUS_KEY, 1)
     app.config[SKYLINE_RUNNER_KEY] = config_dict.get(SKYLINE_RUNNER_KEY)
     app.config[RESCORE_COMMAND_KEY] = config_dict.get(RESCORE_COMMAND_KEY, 'percolator')
+    app.config['containerMethod'] = config_dict.get('containerMethod', 'apptainer')
     app.config['apptainerImage'] = config_dict.get('apptainerImage')
     if app.config[SKYLINE_RUNNER_KEY] is not None:
          app.config[SKYLINE_RUNNER_KEY] = app.config[SKYLINE_RUNNER_KEY].replace(

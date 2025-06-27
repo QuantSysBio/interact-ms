@@ -28,6 +28,7 @@ ALL_CONFIG_KEYS = [
     SKYLINE_RUNNER_KEY,
     'apptainerImage',
     'casaSingImg', 'casaModel',
+    'containerMethod',
 ]
 
 INTERMEDIATE_FILES = [

@@ -37,7 +37,7 @@ def execute_taks(home_key, project_home, task_list, proc_id):
                 ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             else:
                 sub_proc = subprocess.run([
-                    'apptainer', 'run', f'--bind', f'{project_home}:/mnt',
+                    '{apptainer_or_singularity}', 'run', f'--bind', f'{project_home}:/mnt',
                     f'{apptainer_image}', task, '{spliced_upper_limit}'
                 ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             print('hey', sub_proc.stdout)
