@@ -24,7 +24,7 @@ conda create --name interact_ms python=3.11 -c conda-forge
 2) Activate this environment
 
 ```
-conda activate interact_ms_11
+conda activate interact_ms
 ```
 
 3) You will then need to install the interact-ms package (this also installs inSPIRE and PEPSeek):
