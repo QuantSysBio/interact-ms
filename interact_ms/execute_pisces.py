@@ -76,6 +76,7 @@ def prepare_pisces(config_dict, project_home, app_config):
         'experimentTitle': config_dict['project'],
         'fraggerPath': app_config[FRAGGER_PATH_KEY],
         'fraggerMemory': app_config[FRAGGER_MEMORY_KEY],
+        'ms1Accuracy': float(config_dict['ms1Accuracy']),
         'mzAccuracy': float(config_dict['mzAccuracy']),
         'mzUnits': config_dict['mzUnits'],
         'nCores': app_config[CPUS_KEY],
