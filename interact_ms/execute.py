@@ -2,6 +2,7 @@
 """
 import ast
 import os
+import subprocess
 import sys
 import time
 
@@ -12,6 +13,7 @@ from interact_ms.constants import (
     CPUS_KEY,
     FRAGGER_MEMORY_KEY,
     FRAGGER_PATH_KEY,
+    INTERACT_SLURM_SCRIPT,
     INTERACT_HOME_KEY,
     MHCPAN_KEY,
     RESCORE_COMMAND_KEY,
@@ -35,7 +37,6 @@ def execute_invitro_job(app_config, project_home, config_dict, tasks=None):
     write_task_status(job_settings, project_home, tasks)
 
     task_list = subset_tasks(job_settings, tasks, 'invitro')
-    print(task_list)
     inspire_script = INSPIRE_INVITRO_SCRIPT.format(
         home_key=app_config[INTERACT_HOME_KEY],
         project_home=project_home,
@@ -48,19 +49,36 @@ def execute_invitro_job(app_config, project_home, config_dict, tasks=None):
     with open(script_path, mode='w', encoding='UTF-8') as script_file:
         script_file.writelines(inspire_script)
 
-    os.popen(
-        f'{sys.executable} {script_path} > {project_home}/execution_log.txt 2>&1'
-    )
+    print(f'Executing script {script_path} in {project_home}')
+    print(app_config.get(INTERACT_SLURM_SCRIPT))
+    if app_config.get(INTERACT_SLURM_SCRIPT) is None:
+        os.popen(
+            f'{sys.executable} {script_path} > {project_home}/execution_log.txt 2>&1'
+        )
+        running_via_slurm = False
+    else:
+        result = subprocess.run(
+            ['sbatch', app_config[INTERACT_SLURM_SCRIPT], sys.executable, script_path, project_home],
+            stdout=subprocess.PIPE,
+        )
+        proc_id = result.stdout.decode('utf-8').split('Submitted batch job ')[-1].strip()
+        with open(f'{project_home}/slurm_ids.txt', 'w', encoding='UTF-8') as pid_file:
+            pid_file.writelines(str(proc_id)+'\n')
+        running_via_slurm = True
+        
     for idx in range(3):
-        if check_pids(project_home) == 'waiting':
+        print(idx, project_home, running_via_slurm)
+        if check_pids(project_home, running_via_slurm) == 'waiting':
             break
 
         time.sleep(idx+1)
+
 
 def execute_job(app_config, project_home, config_dict, tasks=None):
     """ Function to execute job, writes config file, a bash file with all
         required tasks, and then executes the bash file in the background.
     """
+    print('executing job')
     job_settings = prepare_inspire(config_dict, project_home, app_config)
     write_task_status(job_settings, project_home, tasks)
 
@@ -72,20 +90,38 @@ def execute_job(app_config, project_home, config_dict, tasks=None):
     inspire_script = INSPIRE_SCRIPT.format(
         home_key=app_config[INTERACT_HOME_KEY],
         project_home=project_home,
-        task_list=','.join(task_list)
+        task_list=','.join(task_list),
     )
     script_path = f'{project_home}/inspire_script.py'
     with open(script_path, mode='w', encoding='UTF-8') as script_file:
         script_file.writelines(inspire_script)
 
-    os.popen(
-        f'{sys.executable} {script_path} > {project_home}/execution_log.txt 2>&1'
-    )
+    print(f'Executing script {script_path} in {project_home}')
+    print(app_config.get(INTERACT_SLURM_SCRIPT))
+    if app_config.get(INTERACT_SLURM_SCRIPT) is None:
+        os.popen(
+            f'{sys.executable} {script_path} > {project_home}/execution_log.txt 2>&1'
+        )
+        running_via_slurm = False
+    else:
+        result = subprocess.run(
+            ['sbatch', app_config[INTERACT_SLURM_SCRIPT], sys.executable, script_path, project_home],
+            stdout=subprocess.PIPE,
+        )
+        print(result.stdout.decode('utf-8'))
+        proc_id = result.stdout.decode('utf-8').split('Submitted batch job ')[-1].strip()
+        with open(f'{project_home}/slurm_ids.txt', 'w', encoding='UTF-8') as pid_file:
+            pid_file.writelines(str(proc_id)+'\n')
+        running_via_slurm = True
+        
+    print('los')
     for idx in range(3):
-        if check_pids(project_home) == 'waiting':
+        print(idx, project_home, running_via_slurm)
+        if check_pids(project_home, running_via_slurm) == 'waiting':
             break
 
         time.sleep(idx+1)
+
 
 def prepare_invitro_inspire(config_dict, project_home, app_config):
     """ Function to prepare the inSPIRE run.

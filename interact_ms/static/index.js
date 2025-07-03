@@ -351,7 +351,7 @@ async function checkFilePattern(serverAddress, user, project, file_type) {
         ).then( response => {
             return response.json();
         });
-        metaDict = response['message'];
+        var metaDict = response['message'];
         if (Object.keys(metaDict).length !== 0) {
             if (metaDict['runFragger'] === 1) {
                 document.getElementById('search-required-selection').value = 'searchNeeded';
@@ -381,7 +381,7 @@ async function checkFilePattern(serverAddress, user, project, file_type) {
         ).then( response => {
             return response.json();
         });
-        metaDict = response['message'];
+        var metaDict = response['message'];
         if (Object.keys(metaDict).length !== 0) {
             if (metaDict['runCasa'] === 1) {
                 document.getElementById('dn-required-selection').value = 'deNovoNeeded';
@@ -392,6 +392,29 @@ async function checkFilePattern(serverAddress, user, project, file_type) {
                 if ('deNovoEngine' in metaDict){
                     document.getElementById('dn-engine-selection').value = metaDict['deNovoEngine'];
                     selectDeNovoEngine(metaDict['deNovoEngine'], serverAddress, user, project)
+                }
+            }
+        }
+
+        var response = await fetch(
+            'http://' + serverAddress + ':5000/interact/metadata/' + user + '/' + project + '/search',
+            {
+                method: 'GET',
+            }
+        ).then( response => {
+            return response.json();
+        });
+        var metaDictDb = response['message'];
+        if (Object.keys(metaDictDb).length !== 0) {
+            if (metaDictDb['runFragger'] === 1) {
+                document.getElementById('search-required-selection').value = 'searchNeeded';
+                selectSearchType('searchNeeded', serverAddress, user, project, 'pisces');
+            } else {
+                document.getElementById('search-required-selection').value = 'searchDone';
+                selectSearchType('searchDone', serverAddress, user, project, 'pisces');
+                if ('searchEngine' in metaDictDb){
+                    document.getElementById('search-engine-selection').value = metaDictDb['searchEngine'];
+                    selectSearchEngine(metaDictDb['searchEngine'], serverAddress, user, project, 'pisces')
                 }
             }
         }

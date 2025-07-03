@@ -2,6 +2,7 @@
 """
 import os
 import signal
+import subprocess
 
 import pandas as pd
 
@@ -40,7 +41,7 @@ def cancel_job_helper(home_key, user, project, job_id):
     project_home = f'{home_key}/projects/{user}/{project}'
 
     if job_id is None:
-        pids = get_pids(project_home)
+        pids = get_pids(project_home, False)
     else:
         pids = [int(job_id)]
 
@@ -56,6 +57,18 @@ def cancel_job_helper(home_key, user, project, job_id):
             task_killed = True
         except OSError:
             continue
+
+    if os.path.exists(f'{project_home}/slurm_ids.txt'):
+        slurm_ids = get_pids(project_home, True)
+        result = subprocess.run(
+            ['scancel', str(slurm_ids[0])],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        job_status = result.stdout.decode('utf-8')
+        print(f'{job_status=}')
+        print(f'job id')
+        task_killed = True
 
     if not task_killed:
         return 'No task was running. Please refresh the page.'

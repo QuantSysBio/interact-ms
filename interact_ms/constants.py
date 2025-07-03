@@ -1,6 +1,7 @@
 """ Constants for the interact_ms package.
 """
 INTERACT_HOME_KEY = 'interactHome'
+INTERACT_SLURM_SCRIPT = 'interactSlurmScript'
 SERVER_ADDRESS_KEY = 'serverAddress'
 FRAGGER_PATH_KEY = 'fraggerPath'
 FRAGGER_MEMORY_KEY = 'fraggerMemory'
@@ -21,6 +22,7 @@ ALL_CONFIG_KEYS = [
     FRAGGER_PATH_KEY,
     FRAGGER_MEMORY_KEY,
     INTERACT_HOME_KEY,
+    INTERACT_SLURM_SCRIPT,
     MHCPAN_KEY,
     RESCORE_COMMAND_KEY,
     SERVER_ADDRESS_KEY,

@@ -19,14 +19,14 @@ QUANT_FILE_PATH = 'outputFolder/quant/quantified_per_file.csv'
 
 
 
-def fetch_queue_and_task(project_home, home_key):
+def fetch_queue_and_task(project_home, home_key, running_via_slurm):
     """ Function to fetch interact queue and the job ID of an execution.
     """
-    job_id = safe_job_id_fetch(project_home)
+    job_id = safe_job_id_fetch(project_home, running_via_slurm)
 
     if not job_id:
         time.sleep(3)
-        job_id = safe_job_id_fetch(project_home)
+        job_id = safe_job_id_fetch(project_home, running_via_slurm)
     queue_df = pd.read_csv(
         QUEUE_PATH.format(home_key=home_key)
     )

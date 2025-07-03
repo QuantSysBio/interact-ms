@@ -2,6 +2,7 @@
 """
 from copy import deepcopy
 import os
+import subprocess
 import time
 
 import pandas as pd
@@ -137,28 +138,42 @@ def generate_raw_file_table(user, project, app, variant):
     return html_table
 
 
-def safe_job_id_fetch(project_home):
+def safe_job_id_fetch(project_home, running_via_slurm=False):
     """ Fetch the job ID of a job if it exists.
     """
-    if not os.path.exists(f'{project_home}/job_pids.txt'):
+    # if running_via_slurm:
+    #     file_name = 'slurm_ids.txt'
+    # else:
+    #     file_name = 'job_pids.txt'
+    file_name = 'job_pids.txt'
+
+    if not os.path.exists(f'{project_home}/{file_name}'):
         time.sleep(2)
 
-    if os.path.exists(f'{project_home}/job_pids.txt'):
-        with open(f'{project_home}/job_pids.txt', 'r', encoding='UTF-8') as pid_file:
+    if os.path.exists(f'{project_home}/{file_name}'):
+        with open(f'{project_home}/{file_name}', 'r', encoding='UTF-8') as pid_file:
             return int(pid_file.readline().strip())
     return 0
 
-def get_pids(project_home):
+def get_pids(project_home, running_via_slurm=False):
     """ Function to get the pids
     """
-    if not os.path.exists(f'{project_home}/job_pids.txt'):
+    if running_via_slurm:
+        file_name = 'slurm_ids.txt'
+    else:
+        file_name = 'job_pids.txt'
+    if not os.path.exists(f'{project_home}/{file_name}'):
         time.sleep(3)
-        if not os.path.exists(f'{project_home}/job_pids.txt'):
+        if not os.path.exists(f'{project_home}/{file_name}'):
             return None
 
-    with open(f'{project_home}/job_pids.txt', 'r', encoding='UTF-8') as file:
+    with open(f'{project_home}/{file_name}', 'r', encoding='UTF-8') as file:
         lines = file.readlines()
         pids = [line.rstrip() for line in lines]
+        pids = [pid.strip() for pid in pids]
+
+        if not pids:
+            return None
     return pids
 
 
@@ -175,17 +190,37 @@ def read_meta(project_home, meta_type):
     return {}
 
 
-def check_pids(project_home):
+def check_pids(project_home, running_via_slurm=False):
     """ Function to check if process IDs are still running.
     """
-    pids = get_pids(project_home)
+    pids = get_pids(project_home, running_via_slurm)
+    print(f'{pids=}')
     if pids is None:
         return 'clear'
-    if psutil.pid_exists(int(pids[0])):
-        return 'waiting'
+    if running_via_slurm:
+        if check_slurm_job(str(pids[0])):
+            print('cehcked')
+            return 'waiting'
+        print('cehcked goode')
+    else:
+        if psutil.pid_exists(int(pids[0])):
+            return 'waiting'
 
     return 'done'
 
+def check_slurm_job(job_id):
+    """ Function to check is a slurm job is still running.
+    """
+    result = subprocess.run(
+        ['squeue', '--job', job_id],
+        stdout=subprocess.PIPE,
+    )
+    job_status = result.stdout.decode('utf-8')
+    print(f'{job_status=}')
+    print(f'job id')
+    if job_id in job_status:
+        return True
+    return False
 
 def subset_tasks(settings, tasks=None, mode=None):
     """ Function to subset all possible tasks to fetch

@@ -3,6 +3,7 @@
 import ast
 import os
 import shutil
+import subprocess
 import sys
 import time
 
@@ -15,6 +16,7 @@ from interact_ms.constants import (
     FRAGGER_MEMORY_KEY,
     FRAGGER_PATH_KEY,
     INTERACT_HOME_KEY,
+    INTERACT_SLURM_SCRIPT,
     MHCPAN_KEY,
     RESCORE_COMMAND_KEY,
     SKYLINE_RUNNER_KEY,
@@ -48,17 +50,29 @@ def execute_pisces(app_config, project_home, config_dict, tasks=None):
     pisces_script = PISCES_SCRIPT.format(
         home_key=app_config[INTERACT_HOME_KEY],
         project_home=project_home,
-        task_list=','.join(task_list)
+        task_list=','.join(task_list),
     )
     script_path = f'{project_home}/pisces_script.py'
     with open(script_path, mode='w', encoding='UTF-8') as script_file:
         script_file.writelines(pisces_script)
 
-    os.popen(
-        f'{sys.executable} {script_path} > {project_home}/execution_log.txt 2>&1'
-    )
+    if app_config.get(INTERACT_SLURM_SCRIPT) is None:
+        os.popen(
+            f'{sys.executable} {script_path} > {project_home}/execution_log.txt 2>&1'
+        )
+        running_via_slurm = False
+    else:
+        result = subprocess.run(
+            ['sbatch', app_config[INTERACT_SLURM_SCRIPT], sys.executable, script_path, project_home],
+            stdout=subprocess.PIPE,
+        )
+        proc_id = result.stdout.decode('utf-8').split('Submitted batch job ')[-1].strip()
+        with open(f'{project_home}/slurm_ids.txt', 'w', encoding='UTF-8') as pid_file:
+            pid_file.writelines(str(proc_id)+'\n')
+        running_via_slurm = True
+        
     for idx in range(3):
-        if check_pids(project_home) == 'waiting':
+        if check_pids(project_home, running_via_slurm) == 'waiting':
             break
 
         time.sleep(idx+1)
