@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='interact-ms',
-    version='2.0rc2',
+    version='2.0rc3',
     description='Interactive GUI for mass spectrometry identification and analysis.',
     author='John Cormican, Sahil Khan, Juliane Liepe, Manuel S. Pereira',
     author_email='juliane.liepe@mpinat.mpg.de',
