@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='interact-ms',
-    version='2.0rc3',
+    version='2.0rc4',
     description='Interactive GUI for mass spectrometry identification and analysis.',
     author='John Cormican, Sahil Khan, Juliane Liepe, Manuel S. Pereira',
     author_email='juliane.liepe@mpinat.mpg.de',
@@ -21,7 +21,7 @@ setup(
     packages=find_packages(),
     python_requires='>=3.11',
     install_requires=[
-        'piscecs-ms==0.3',
+        'pisces-ms==0.3',
         'blinker==1.6.2',
         'click==8.1.3',
         'flask==2.3.2',
