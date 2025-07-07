@@ -83,9 +83,6 @@ def prepare_pisces(config_dict, project_home, app_config):
     pisces_settings = {'variant': 'pisces'}
     pisces_settings['quantify'] = bool(config_dict['runQuantification'])
 
-
-
-
     output_config = {
         'experimentTitle': config_dict['project'],
         'fraggerPath': app_config[FRAGGER_PATH_KEY],
@@ -110,14 +107,14 @@ def prepare_pisces(config_dict, project_home, app_config):
     with open(f'{project_home}/search_metadata.yml', 'r', encoding='UTF-8') as stream:
         db_search_config = yaml.safe_load(stream)
         output_config['dbSearchEngine'] = db_search_config['searchEngine']
-        output_config['runDbSearch'] = bool(db_search_config['runFragger'])
+        output_config['runDbSearch'] = db_search_config['runFragger'] == 1
 
     if (
         os.path.exists(f'{project_home}/search/dbSearch.csv') or
         os.path.exists(f'{project_home}/search/dbSearch_0.csv')
     ):
         output_config['dbSearchResults'] = [f'{project_home}/search/dbSearch*.csv']
-    elif bool(db_search_config['runFragger']):
+    elif db_search_config['runFragger'] == 1:
         output_config['dbSearchResults'] = [f'{project_home}/ms/*.pepXML']
     else:
         output_config['dbSearchResults'] = None
@@ -160,6 +157,7 @@ def prepare_pisces(config_dict, project_home, app_config):
     else:
         pisces_settings['binding'] = False
 
+    pisces_settings['useCase'] = output_config['useCase']
     if os.path.exists(f'{project_home}/proteome'):
         proteome_files = os.listdir(f'{project_home}/proteome')
         if len(proteome_files) > 0:

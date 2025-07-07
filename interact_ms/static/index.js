@@ -409,7 +409,10 @@ async function checkFilePattern(serverAddress, user, project, file_type) {
             if (metaDictDb['runFragger'] === 1) {
                 document.getElementById('search-required-selection').value = 'searchNeeded';
                 selectSearchType('searchNeeded', serverAddress, user, project, 'pisces');
-            } else {
+            } else if (metaDictDb['runFragger'] === -1) {
+                document.getElementById('search-required-selection').value = 'noSearch';
+                selectSearchType('noSearch', serverAddress, user, project, 'pisces');
+            }else {
                 document.getElementById('search-required-selection').value = 'searchDone';
                 selectSearchType('searchDone', serverAddress, user, project, 'pisces');
                 if ('searchEngine' in metaDictDb){
@@ -633,6 +636,18 @@ function selectSearchType(value, serverAddress, user, project, variant='standard
                 setElementDisplay(['msfragger-add-contams'], displayType='none');
             };
             break;
+        case 'noSearch':
+            setElementDisplay(['search-engine-div'], displayType='none');
+            var configObject = {
+                'user': user,
+                'project': project,
+                'metadata_type': 'search',
+                'runFragger': -1,
+                'searchEngine': 'peaks',
+            };
+            postJson(serverAddress, 'metadata', configObject);
+
+            break;
         case 'searchNeeded':
             setElementDisplay(['search-engine-div'], displayType='none');
             if (variant === 'standard') {
@@ -644,7 +659,7 @@ function selectSearchType(value, serverAddress, user, project, variant='standard
                     var fraggerUseContams = 'yes'
                 }
             } else {
-                var fraggerUseContams = 'no';
+                var fraggerUseContams = 'yes';
             };
             var configObject = {
                 'user': user,
