@@ -94,6 +94,7 @@ def prepare_pisces(config_dict, project_home, app_config):
         'outputFolder': f'{project_home}/outputFolder',
         'scansFolder': f'{project_home}/ms',
         'scansFormat': 'mgf',
+        'treeSize': app_config['piscesTreeSize'],
         SLURM_SCRIPT_KEY: app_config[SLURM_SCRIPT_KEY],
         CONTAM_FOLDER_KEY: app_config[CONTAM_FOLDER_KEY],
         'additionalConfigs': {

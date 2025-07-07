@@ -65,9 +65,6 @@ def cancel_job_helper(home_key, user, project, job_id):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-        job_status = result.stdout.decode('utf-8')
-        print(f'{job_status=}')
-        print(f'job id')
         task_killed = True
 
     if not task_killed:

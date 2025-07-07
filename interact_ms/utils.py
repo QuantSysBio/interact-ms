@@ -52,7 +52,7 @@ def get_task_list(user, project, app, variant):
         tasks = [task for task in tasks if task != 'extractCandidates']
     if not params_config['runQuantification']:
         tasks = [task for task in tasks if task != 'quantify']
-    print(variant, tasks)
+
     return tasks
 
 def generate_subset_table(user, project, app, variant):
@@ -194,14 +194,11 @@ def check_pids(project_home, running_via_slurm=False):
     """ Function to check if process IDs are still running.
     """
     pids = get_pids(project_home, running_via_slurm)
-    print(f'{pids=}')
     if pids is None:
         return 'clear'
     if running_via_slurm:
         if check_slurm_job(str(pids[0])):
-            print('cehcked')
             return 'waiting'
-        print('cehcked goode')
     else:
         if psutil.pid_exists(int(pids[0])):
             return 'waiting'
@@ -216,8 +213,7 @@ def check_slurm_job(job_id):
         stdout=subprocess.PIPE,
     )
     job_status = result.stdout.decode('utf-8')
-    print(f'{job_status=}')
-    print(f'job id')
+
     if job_id in job_status:
         return True
     return False
@@ -251,7 +247,6 @@ def subset_tasks(settings, tasks=None, mode=None):
 def write_task_status(settings, project_home, tasks=None):
     """ Function to write the task status DataFrame. 
     """
-    print(f'{tasks=}')
     tasks = subset_tasks(settings, tasks, settings.get('variant'))
     if settings.get('variant') == 'invitro':
         task_names = [INVITRO_TASK_DESCRIPTIONS[task] for task in tasks]
@@ -259,8 +254,7 @@ def write_task_status(settings, project_home, tasks=None):
         task_names = [PISCES_TASK_DESCRIPTIONS[task] for task in tasks]
     else:
         task_names = [TASK_DESCRIPTIONS[task] for task in tasks]
-    print(f'{tasks=}')
-    print(f'{task_names=}')
+
     task_df = pd.DataFrame({
         'taskId': tasks,
         'taskName': task_names

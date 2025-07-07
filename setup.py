@@ -21,7 +21,7 @@ setup(
     packages=find_packages(),
     python_requires='>=3.11',
     install_requires=[
-        'pisces-ms==0.2',
+        'piscecs-ms==0.3',
         'blinker==1.6.2',
         'click==8.1.3',
         'flask==2.3.2',

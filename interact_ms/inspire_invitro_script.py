@@ -40,8 +40,7 @@ def execute_taks(home_key, project_home, task_list, proc_id):
                     '{apptainer_or_singularity}', 'run', f'--bind', f'{project_home}:/mnt',
                     f'{apptainer_image}', task, '{spliced_upper_limit}'
                 ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            print('hey', sub_proc.stdout)
-            print('ok', sub_proc.stdout.decode('utf-8'))
+
             try:
                 print('ok', sub_proc.stderr.decode('utf-8'))
             except:

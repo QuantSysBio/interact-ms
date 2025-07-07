@@ -28,6 +28,7 @@ ALL_CONFIG_KEYS = [
     SERVER_ADDRESS_KEY,
     SLURM_SCRIPT_KEY,
     SKYLINE_RUNNER_KEY,
+    'piscesTreeSize',
     'apptainerImage',
     'casaSingImg', 'casaModel',
     'containerMethod',

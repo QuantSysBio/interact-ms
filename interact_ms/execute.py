@@ -29,10 +29,6 @@ def execute_invitro_job(app_config, project_home, config_dict, tasks=None):
     """ Function to execute job, writes config file, a bash file with all
         required tasks, and then executes the bash file in the background.
     """
-    # print('los')
-    # os.system(
-    #     f'mkdir -p {project_home}/outputFolder && cp -rp /data/John/interact-1.1/inspire_invitro {project_home}/outputFolder'
-    # )
     job_settings = prepare_invitro_inspire(config_dict, project_home, app_config)
     write_task_status(job_settings, project_home, tasks)
 
@@ -49,8 +45,6 @@ def execute_invitro_job(app_config, project_home, config_dict, tasks=None):
     with open(script_path, mode='w', encoding='UTF-8') as script_file:
         script_file.writelines(inspire_script)
 
-    print(f'Executing script {script_path} in {project_home}')
-    print(app_config.get(INTERACT_SLURM_SCRIPT))
     if app_config.get(INTERACT_SLURM_SCRIPT) is None:
         os.popen(
             f'{sys.executable} {script_path} > {project_home}/execution_log.txt 2>&1'
@@ -67,7 +61,6 @@ def execute_invitro_job(app_config, project_home, config_dict, tasks=None):
         running_via_slurm = True
         
     for idx in range(3):
-        print(idx, project_home, running_via_slurm)
         if check_pids(project_home, running_via_slurm) == 'waiting':
             break
 
@@ -78,7 +71,6 @@ def execute_job(app_config, project_home, config_dict, tasks=None):
     """ Function to execute job, writes config file, a bash file with all
         required tasks, and then executes the bash file in the background.
     """
-    print('executing job')
     job_settings = prepare_inspire(config_dict, project_home, app_config)
     write_task_status(job_settings, project_home, tasks)
 
@@ -114,9 +106,7 @@ def execute_job(app_config, project_home, config_dict, tasks=None):
             pid_file.writelines(str(proc_id)+'\n')
         running_via_slurm = True
         
-    print('los')
     for idx in range(3):
-        print(idx, project_home, running_via_slurm)
         if check_pids(project_home, running_via_slurm) == 'waiting':
             break
 

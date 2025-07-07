@@ -507,7 +507,7 @@ def check_results(user, project, workflow):
 
     time.sleep(0.5)
     status = check_pids(project_home, app.config.get(INTERACT_SLURM_SCRIPT) is not None)
-    print('status', status)
+
     # Task incomplete - either running or queueing (or total failure)
     if status == 'waiting':
         queue_df, task_id = fetch_queue_and_task(
@@ -562,7 +562,6 @@ def check_results(user, project, workflow):
         pep_seek_visible = 'hidden'
         key_file = 'pisces-report.html'
 
-    print(key_file)
     if os.path.exists(f'{project_home}/outputFolder/{key_file}'):
         return deal_with_success(
             project_home,
@@ -717,6 +716,7 @@ def main():
     app.config[RESCORE_COMMAND_KEY] = config_dict.get(RESCORE_COMMAND_KEY, 'percolator')
     app.config['containerMethod'] = config_dict.get('containerMethod', 'apptainer')
     app.config['apptainerImage'] = config_dict.get('apptainerImage')
+    app.config['piscesTreeSize'] = config_dict.get('piscesTreeSize', 500)
     if app.config[SKYLINE_RUNNER_KEY] is not None:
          app.config[SKYLINE_RUNNER_KEY] = app.config[SKYLINE_RUNNER_KEY].replace(
             '\\', '/'
