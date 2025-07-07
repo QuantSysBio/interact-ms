@@ -19,14 +19,14 @@ QUANT_FILE_PATH = 'outputFolder/quant/quantified_per_file.csv'
 
 
 
-def fetch_queue_and_task(project_home, home_key):
+def fetch_queue_and_task(project_home, home_key, running_via_slurm):
     """ Function to fetch interact queue and the job ID of an execution.
     """
-    job_id = safe_job_id_fetch(project_home)
+    job_id = safe_job_id_fetch(project_home, running_via_slurm)
 
     if not job_id:
         time.sleep(3)
-        job_id = safe_job_id_fetch(project_home)
+        job_id = safe_job_id_fetch(project_home, running_via_slurm)
     queue_df = pd.read_csv(
         QUEUE_PATH.format(home_key=home_key)
     )
@@ -151,16 +151,10 @@ def create_status_fig(project_home):
         margin={'r':30, 'l':30, 't':padding, 'b':padding}
     )
 
-    fig_html = fig.to_html()
     fig.write_image(
         f'{project_home}/progress.svg', engine='kaleido'
     )
-    with open(
-        f'{project_home}/progress.html',
-        mode='w',
-        encoding='UTF-8',
-    ) as html_out:
-        html_out.write(fig_html)
+
 
 def safe_fetch(file_path):
     """ Function to check if a file_path exists and return the contents
@@ -171,7 +165,7 @@ def safe_fetch(file_path):
             return file_contents.read()
     return ''
 
-def deal_with_queue(interact_home, project_home, server_address, header_and_footer):
+def deal_with_queue(interact_home, project_home, server_address, user, project, header_and_footer):
     """ Function to provide information if the job execution is still queued.
     """
     create_queue_fig(interact_home, project_home)
@@ -179,6 +173,8 @@ def deal_with_queue(interact_home, project_home, server_address, header_and_foot
     return render_template(
         'queued.html',
         server_address=server_address,
+        user=user,
+        project=project,
         queue_svg=queue_svg,
         **header_and_footer
     )
@@ -187,7 +183,7 @@ def deal_with_failure(project_home, server_address, user, project, workflow, hea
     """ Function to provide information if the job execution has failed.
     """
     create_status_fig(project_home)
-    progress_html = safe_fetch(f'{project_home}/progress.html')
+    progress_html = safe_fetch(f'{project_home}/progress.svg')
 
     return render_template(
         'failed.html',
@@ -219,6 +215,7 @@ def deal_with_success(
         user,
         project,
         workflow,
+        variant,
         pep_seek_visible,
         header_and_footer,
     ):
@@ -232,6 +229,37 @@ def deal_with_success(
     quant_svg = safe_fetch(f'{project_home}/outputFolder/img/peptide_volcano.svg')
     if not quant_svg:
         quant_svg = safe_fetch(f'{project_home}/outputFolder/img/norm_correlation.svg')
+
+    if variant == 'invitro':
+        psm_fdr_svg = safe_fetch(f'{project_home}/outputFolder/spectralAngle_distro.svg')
+        return render_template(
+            'ready-invitro.html',
+            server_address=server_address,
+            user=user,
+            project=project,
+            workflow=workflow,
+            psm_fdr_html=psm_fdr_svg,
+            progress_html=progress_svg,
+            **header_and_footer
+        )
+    elif variant == 'pisces':
+        psm_fdr_svg = safe_fetch(
+            f'{project_home}/outputFolder/img/per_stratum.svg'
+        )
+        spec_angle_svg = safe_fetch(
+            f'{project_home}/outputFolder/img/spectralAngle_distributions.svg'
+        )
+        return render_template(
+            'ready-pisces.html',
+            server_address=server_address,
+            user=user,
+            project=project,
+            workflow=workflow,
+            psm_fdr_svg=psm_fdr_svg,
+            spec_angle_svg=spec_angle_svg,
+            progress_svg=progress_svg,
+            **header_and_footer
+        )
 
     return render_template(
         'ready.html',

@@ -25,23 +25,32 @@
             </div>
         </div>
 
-        <div class="center-content" style="height: 100px;">
+        <div class="center-content" style="height: 120px;">
             <div class="buttons"> 
                 <div id="standard-button-div" style = "margin-right:40px;">
-                    <button 
-                    id="inSPIRE-Standard-button" class="white-black-button"
+                    <button id="inSPIRE-Standard-button" class="white-black-button"
                     onclick="selectUseCase('standard', '{{ server_address }}', '{{ user }}', '{{ project }}')"
                     >inSPIRE</button>
-                              
                 </div>
                 <div id="select-button-div" style = "margin-left:40px;">
-                    <button 
-                    id="PEPSeek-button" class="black-white-button"
+                    <button id="PEPSeek-button" class="red-white-button"
                     onclick="selectUseCase('pathogen', '{{ server_address }}', '{{ user }}', '{{ project }}')"
                     >PEPSeek</button>
-                    
                 </div>
-                
+            </div>
+        </div>
+        <div class="center-content" style="height: 100px;">
+            <div class="buttons"> 
+                <div id="select-button-div" style = "margin-right:40px;">
+                    <button id="invitro-button" class="purple-white-button"
+                    onclick="selectUseCase('invitro', '{{ server_address }}', '{{ user }}', '{{ project }}')"
+                    >inSPIRE <i>in vitro</i></button>
+                </div>
+                <div id="select-button-div" style = "margin-left:40px;">
+                    <button id="PISCES-button" class="blue-white-button"
+                    onclick="selectUseCase('pisces', '{{ server_address }}', '{{ user }}', '{{ project }}')"
+                    >PISCES</button>
+                </div>
             </div>
         </div>
 	

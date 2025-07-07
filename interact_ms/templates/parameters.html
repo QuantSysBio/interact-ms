@@ -100,7 +100,7 @@
 			</div>
 
 
-			<div id="pepseek-filter-div">
+			<div id="pepseek-filter-div" style="visibility: hidden;">
 				<p style = "font-size: larger;">
 					<b>Filter epitope candidates based on:</b>
 				</p>
@@ -121,6 +121,47 @@
 	
 	
 	<!--Third Section -->
+	<div id="pisces-parameters"
+		style ="display:flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items:center;
+		visibility:hidden;">
+		<div class="parameter-third-section-left">
+	
+			<div style=" width:1404px; text-align: left; margin-left:1%; ">
+					<p style = "font-size: larger;">
+						<b>PISCES Specific Parameters</b>
+					</p>
+			</div>
+	
+			<p style="margin-left:1%;">Select your PISCES use case.</p>
+			<form style="margin-left:1%;">
+				<select id="pisces-selection" style = "border:2px solid  rgb(5, 208, 141); width:250px; height:40px; font-size: medium;" autocomplete="off" onchange="selectPisces(this.value)">
+					<option value="none" selected disabled hidden>Select Use Case</option>
+					<option value="noncan">Non-Canonical Discovery</option>
+					<option value="assembly">Unannotated Proteome Assembly</option>
+				</select>
+			</form>
+			<div id="pisces-noncan-params" style="display:none; margin-left:1%;">
+				<table id="pisces-noncan-table">
+					<br>
+					<tr>
+						<td style="width: 300px;">Cryptic Proteome Folder:</td>
+						<td style="width: 300px; padding-left: 20px; margin-left: 20px;">
+							<select id="pisces-cryptic-folder-selection" style = "border:2px solid  rgb(5, 208, 141); width:250px; height:40px; font-size: medium;" autocomplete="off" onchange="selectCrypticFolder(this.value)">
+								<option value="no cryptic database used" selected>No Cryptic Folder Selected</option>
+							</select>
+						</td>
+						<td style="width: 300px; padding-left: 20px; margin-left: 20px;" id="cryptic-folder-path">
+
+						</td>
+				</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+
 	
 	<div style = "display:flex;
 				flex-direction: row;
@@ -193,15 +234,15 @@
 
 	<div id="execution-div" class="container" style=" height:200px;">
 		<div class="vertical-center" style = "margin-top: 0%; height:200px;">
-			<button id="parameter-save-button" class = "ms-data-extra" style = " border-radius: 10px; cursor: pointer;font-size:x-large; width :250px; height:90px; margin-right: 40px;" onclick="saveParameters('{{ server_address }}', '{{ user }}', '{{ project }}')">
+			<button id="parameter-save-button" class = "ms-data-extra" style = " border-radius: 10px; cursor: pointer;font-size:x-large; width :250px; height:90px; margin-right: 40px;" onclick="saveParameters('{{ server_address }}', '{{ user }}', '{{ project }}', '{{ variant }}')">
 				Save Parameters
 			</button>
 			<br><br>
-			<button id="execute-button" class=" ms-data-extra" style = " border-radius: 10px;cursor:pointer; font-size:x-large;width:250px; margin-left: 40px; height:90px; margin-right: 40px;" onclick="executePipeline('{{ server_address }}', '{{ user }}', '{{ project }}')">
+			<button id="execute-button" class=" ms-data-extra" style = " border-radius: 10px;cursor:pointer; font-size:x-large;width:250px; margin-left: 40px; height:90px; margin-right: 40px;" onclick="executePipeline('{{ server_address }}', '{{ user }}', '{{ project }}', '{{ variant }}')">
 				Execute Pipeline
 			</button>
 			<br><br>
-			<button id="subset-button" class=" ms-data-extra" style = " border-radius: 10px;cursor:pointer; font-size:x-large;width:250px; margin-left: 40px; height:90px" onclick="subsetPipeline('{{ server_address }}', '{{ user }}', '{{ project }}')">
+			<button id="subset-button" class=" ms-data-extra" style = " border-radius: 10px;cursor:pointer; font-size:x-large;width:250px; margin-left: 40px; height:90px" onclick="subsetPipeline('{{ server_address }}', '{{ user }}', '{{ project }}', '{{ variant }}')">
 				Execute Subset of Tasks
 			</button>
 		</div>

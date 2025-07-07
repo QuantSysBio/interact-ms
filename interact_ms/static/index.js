@@ -209,11 +209,19 @@ function selectWorkflow(value, serverAddress) {
 /* ============================================= FUNCTIONAL ============================================= */
 
 async function uploadFiles(serverAddress, user, project, mode) {
-    var selectedFiles = (mode === 'proteome-select') ? [
+    if (mode === 'proteome-select') {
+        var selectedFiles = [
             document.getElementById('host-proteome-file-upload').files[0], 
             document.getElementById('pathogen-proteome-file-upload').files[0]
-        ] 
-        : Array.from(document.getElementById(mode + '-file-upload').files);
+        ];
+    } else if (mode === 'proteome-invitro') {
+        var selectedFiles = [
+            document.getElementById('prot-seq-file-upload').files[0], 
+            document.getElementById('contams-prot-file-upload').files[0]
+        ];
+    } else {
+        var selectedFiles = Array.from(document.getElementById(mode + '-file-upload').files);
+    };
 
     //If file upload was not completed, do not allow users to proceed.
     if(!checkPreconditions(mode, selectedFiles)) return;
@@ -232,7 +240,7 @@ async function uploadFiles(serverAddress, user, project, mode) {
     );
 
     // add progress event to find the progress of file upload 
-    if (mode == 'fragger-params') {
+    if (['fragger-params', 'search-pisces-dn'].includes(mode)) {
         ajax.upload.addEventListener("progress", progressHandler2);
     } else {
         ajax.upload.addEventListener("progress", progressHandler);
@@ -273,7 +281,7 @@ function progressHandler2(ev) {
     let totalSize = Math.round((ev.total/1000000000 + Number.EPSILON) * 1000)/1000; // total size of the file in bytes
     let loadedSize = Math.round((ev.loaded/1000000000 + Number.EPSILON) * 1000)/1000; // loaded size of the file in bytes    
 
-    document.getElementById("loaded_n_total").innerHTML = "Uploaded " + loadedSize + " GB of " + totalSize + " GB.";
+    document.getElementById("loaded_n_total2").innerHTML = "Uploaded " + loadedSize + " GB of " + totalSize + " GB.";
 
     // calculate percentage 
     var percent = (ev.loaded / ev.total) * 100;
@@ -303,8 +311,12 @@ function checkPreconditions(mode, files) {
 async function checkFilePattern(serverAddress, user, project, file_type) {
     if (file_type === 'fragger-params') {
         return 
+    } else if (file_type.includes('search-pisces')) {
+        document.getElementById('search-pisces-db-file-list').innerHTML = "";
+        document.getElementById('search-pisces-dn-file-list').innerHTML = "";
+    } else {
+        document.getElementById(file_type + "-file-list").innerHTML = "";
     }
-    document.getElementById(file_type + "-file-list").innerHTML = "";
 
     var response = await fetch(
         'http://' + serverAddress + ':5000/interact/checkPattern/' + file_type,
@@ -320,7 +332,15 @@ async function checkFilePattern(serverAddress, user, project, file_type) {
     });
 
     var filesFound = response['message'];
-    updateListElement(file_type + "-file-list", filesFound);
+    if (file_type.includes('search-pisces')) {
+        var dbFiles = filesFound.filter(val => val.includes('dbSearch'));
+        var dnFiles = filesFound.filter(val => !val.includes('dbSearch'));
+
+        updateListElement('search-pisces-db-file-list', dbFiles)
+        updateListElement('search-pisces-dn-file-list', dnFiles)
+    } else {
+        updateListElement(file_type + "-file-list", filesFound)
+    }
 
     if (file_type === 'search') {
         var response = await fetch(
@@ -331,7 +351,7 @@ async function checkFilePattern(serverAddress, user, project, file_type) {
         ).then( response => {
             return response.json();
         });
-        metaDict = response['message'];
+        var metaDict = response['message'];
         if (Object.keys(metaDict).length !== 0) {
             if (metaDict['runFragger'] === 1) {
                 document.getElementById('search-required-selection').value = 'searchNeeded';
@@ -352,6 +372,55 @@ async function checkFilePattern(serverAddress, user, project, file_type) {
                 }
             }
         }
+    } else if (file_type === 'search-pisces') {
+        var response = await fetch(
+            'http://' + serverAddress + ':5000/interact/metadata/' + user + '/' + project + '/denovo',
+            {
+                method: 'GET',
+            }
+        ).then( response => {
+            return response.json();
+        });
+        var metaDict = response['message'];
+        if (Object.keys(metaDict).length !== 0) {
+            if (metaDict['runCasa'] === 1) {
+                document.getElementById('dn-required-selection').value = 'deNovoNeeded';
+                selectDeNovoType('deNovoNeeded', serverAddress, user, project)
+            } else {
+                document.getElementById('dn-required-selection').value = 'deNovoDone';
+                selectDeNovoType('deNovoDone', serverAddress, user, project)
+                if ('deNovoEngine' in metaDict){
+                    document.getElementById('dn-engine-selection').value = metaDict['deNovoEngine'];
+                    selectDeNovoEngine(metaDict['deNovoEngine'], serverAddress, user, project)
+                }
+            }
+        }
+
+        var response = await fetch(
+            'http://' + serverAddress + ':5000/interact/metadata/' + user + '/' + project + '/search',
+            {
+                method: 'GET',
+            }
+        ).then( response => {
+            return response.json();
+        });
+        var metaDictDb = response['message'];
+        if (Object.keys(metaDictDb).length !== 0) {
+            if (metaDictDb['runFragger'] === 1) {
+                document.getElementById('search-required-selection').value = 'searchNeeded';
+                selectSearchType('searchNeeded', serverAddress, user, project, 'pisces');
+            } else if (metaDictDb['runFragger'] === -1) {
+                document.getElementById('search-required-selection').value = 'noSearch';
+                selectSearchType('noSearch', serverAddress, user, project, 'pisces');
+            }else {
+                document.getElementById('search-required-selection').value = 'searchDone';
+                selectSearchType('searchDone', serverAddress, user, project, 'pisces');
+                if ('searchEngine' in metaDictDb){
+                    document.getElementById('search-engine-selection').value = metaDictDb['searchEngine'];
+                    selectSearchEngine(metaDictDb['searchEngine'], serverAddress, user, project, 'pisces')
+                }
+            }
+        }
     };
 }
 
@@ -362,8 +431,12 @@ async function checkFilePattern(serverAddress, user, project, file_type) {
  * @param {*} file_type 
  */
 async function clearFilePattern(serverAddress, user, project, file_type) {
-    document.getElementById(file_type + "-file-list").innerHTML = "";
-
+    if (file_type === 'search-pisces') {
+        document.getElementById("search-pisces-db-file-list").innerHTML = "";
+        document.getElementById("search-pisces-dn-file-list").innerHTML = "";
+    } else {
+        document.getElementById(file_type + "-file-list").innerHTML = "";
+    }
 
     var response = await fetch(
         'http://' + serverAddress + ':5000/interact/clearPattern/' + file_type,
@@ -379,7 +452,15 @@ async function clearFilePattern(serverAddress, user, project, file_type) {
     });
 
     var filesFound = response['message'];
-    updateListElement(file_type + "-file-list", filesFound)
+    if (file_type === 'search-pisces') {
+        var dbFiles = filesFound.filter(val => val.includes('dbSearch'));
+        var dnFiles = filesFound.filter(val => !val.includes('dbSearch'));
+
+        updateListElement('search-pisces-db-file-list', dbFiles)
+        updateListElement('search-pisces-dn-file-list', dnFiles)
+    } else {
+        updateListElement(file_type + "-file-list", filesFound)
+    };
 }
 
 
@@ -456,6 +537,10 @@ async function revertGUI(serverAddress, user, project, frame) {
         case 'parameters':
             window.location.href = 'http://' + serverAddress + ':5000/interact-page/proteome/' + user + '/' + project;  
             break;
+
+        case 'subset':
+            window.location.href = 'http://' + serverAddress + ':5000/interact-page/parameters/' + user + '/' + project;  
+            break;
     };
 
     setElementDisplay(blockIds);
@@ -528,7 +613,6 @@ function setElementVisibility(ids, visibilityType = 'visible') {
  */
 function updateListElement(listName, array) {
     let ul = document.getElementById(listName);
-
     array.forEach ((elem) => {
         var li = document.createElement("li");
         li.appendChild(document.createTextNode(elem));
@@ -544,21 +628,39 @@ function updateListElement(listName, array) {
  * 
  * @param {*} value chosen search type.
  */
-function selectSearchType(value, serverAddress, user, project) {
+function selectSearchType(value, serverAddress, user, project, variant='standard') {
     switch(value){
         case 'searchDone':
             setElementDisplay(['search-engine-div']);
-            setElementDisplay(['msfragger-add-contams'], displayType='none');
+            if (variant === 'standard') {
+                setElementDisplay(['msfragger-add-contams'], displayType='none');
+            };
+            break;
+        case 'noSearch':
+            setElementDisplay(['search-engine-div'], displayType='none');
+            var configObject = {
+                'user': user,
+                'project': project,
+                'metadata_type': 'search',
+                'runFragger': -1,
+                'searchEngine': 'peaks',
+            };
+            postJson(serverAddress, 'metadata', configObject);
+
             break;
         case 'searchNeeded':
             setElementDisplay(['search-engine-div'], displayType='none');
-            setElementDisplay(['ms-fragger-details']);
-            setElementDisplay(['msfragger-add-contams']);
-            if (document.getElementById('contams_no').checked === true) {
-                var fraggerUseContams = 'no'
+            if (variant === 'standard') {
+                setElementDisplay(['ms-fragger-details']);
+                setElementDisplay(['msfragger-add-contams']);
+                if (document.getElementById('contams_no').checked === true) {
+                    var fraggerUseContams = 'no'
+                } else {
+                    var fraggerUseContams = 'yes'
+                }
             } else {
-                var fraggerUseContams = 'yes'
-            }
+                var fraggerUseContams = 'yes';
+            };
             var configObject = {
                 'user': user,
                 'project': project,
@@ -572,7 +674,26 @@ function selectSearchType(value, serverAddress, user, project) {
     };
 };
 
-function selectSearchEngine(value, serverAddress, user, project) {
+function selectDeNovoType(value, serverAddress, user, project) {
+    switch(value){
+        case 'deNovoDone':
+            setElementDisplay(['de-novo-upload-div']);
+            break;
+        case 'deNovoNeeded':
+            setElementDisplay(['de-novo-upload-div'], displayType='none');
+            var configObject = {
+                'user': user,
+                'project': project,
+                'metadata_type': 'denovo',
+                'runCasa': 1,
+                'deNovoEngine': 'casanovo',
+            };
+            postJson(serverAddress, 'metadata', configObject);
+            break;
+    };
+};
+
+function selectSearchEngine(value, serverAddress, user, project, variant='standard') {
     var configObject = {
         'user': user,
         'project': project,
@@ -581,8 +702,23 @@ function selectSearchEngine(value, serverAddress, user, project) {
         'searchEngine': value,
     };
     postJson(serverAddress, 'metadata', configObject);
-    setElementDisplay([ 'search-column-1', 'search-column-2', 'search-separator']);
+    if (variant === 'pisces') {
+        setElementDisplay([ 'pisces-db-upload']);
+    } else {
+        setElementDisplay([ 'search-column-1', 'search-column-2', 'search-separator', ]);
+    }
 
+};
+
+function selectDeNovoEngine(value, serverAddress, user, project) {
+    var configObject = {
+        'user': user,
+        'project': project,
+        'metadata_type': 'denovo',
+        'deNovoEngine': value,
+        'runCasa': 0,
+    };
+    postJson(serverAddress, 'metadata', configObject);
 };
 
 /**
@@ -659,13 +795,25 @@ function controlCheck(col, file_name, item) {
     }
 };
 
+function selectPisces(value) {
+    if (value === 'noncan') {
+        document.getElementById("pisces-noncan-params").style.display = 'block';
+    } else {
+        document.getElementById("pisces-noncan-params").style.display = 'none';
+    }
+};
+
 function replicateCheck(col, file_name, item, index) {
     if (item.includes(file_name)) {
         col.getElementsByClassName('sample-value')[0].value = index + 1;
     }
 };
 
-async function parametersCheck(serverAddress, user, project)
+function selectCrypticFolder(value) {
+    document.getElementById('cryptic-folder-path').innerHTML = value;
+}
+
+async function parametersCheck(serverAddress, user, project, mode='standard')
 {
     var response = await fetch(
         'http://' + serverAddress + ':5000/interact/metadata/' + user + '/' + project + '/parameters',
@@ -677,8 +825,55 @@ async function parametersCheck(serverAddress, user, project)
     });
     metaDict = response['message'];
 
+    var coreResponse = await fetch(
+        'http://' + serverAddress + ':5000/interact/metadata/' + user + '/' + project + '/core',
+        {
+            method: 'GET',
+        }
+    ).then( coreResponse => {
+        return coreResponse.json();
+    });
+    var variant = coreResponse['message']['variant']
+    if (variant === 'pisces') {
+        setElementVisibility(["pisces-parameters"]);
+        var crypFolderResponse = await fetch(
+            'http://' + serverAddress + ':5000/interact/metadata/' + user + '/' + project + '/pisces-cryptic',
+            {
+                method: 'GET',
+            }
+        ).then( crypFolderResponse => {
+            return crypFolderResponse.json();
+        });
+        var crypticFolders = crypFolderResponse['message'];
+        console.log(crypticFolders);
+        var crypticFolderSelect = document.getElementById('pisces-cryptic-folder-selection');
+        for (const [key, value] of Object.entries(crypticFolders)) {
+            console.log(key, value);
+            var opt = document.createElement('option');
+            opt.innerHTML = key;
+            opt.value = value;
+            crypticFolderSelect.appendChild(opt);
+        };
+
+        if ('piscesSelection' in metaDict) {
+            document.getElementById('pisces-selection').value = metaDict['piscesSelection'];
+            selectPisces(metaDict['piscesSelection'])
+            if (metaDict['piscesSelection'] === 'noncan') {
+                if ('crypticFolder' in metaDict) {
+                    document.getElementById('pisces-cryptic-folder-selection').value = metaDict['crypticFolder'];
+                    selectCrypticFolder(metaDict['crypticFolder']);
+                } else {
+                    selectCrypticFolder('no cryptic database used');
+                }
+            };
+        };
+    };
+
     if ('ms1Accuracy' in metaDict) {
         document.getElementById('ms1-accuracy-input').value = metaDict['ms1Accuracy'];
+    }
+    if ('splicedUpperLimit' in metaDict) {
+        document.getElementById('spliced-upper-input').value = metaDict['splicedUpperLimit'];
     }
     if ('mzAccuracy' in metaDict) {
         document.getElementById('ms2-accuracy-input').value = metaDict['mzAccuracy'];
@@ -686,6 +881,9 @@ async function parametersCheck(serverAddress, user, project)
     if ('mzUnits' in metaDict) {
         document.getElementById('ms2-unit-selection').value = metaDict['mzUnits'];
     }
+    if (mode === 'invitro') {
+        return;
+    };
     if ('datasetType' in metaDict) {
         document.getElementById('dataset-type-selection').value = metaDict['datasetType'];
     }
@@ -751,6 +949,8 @@ async function parametersCheck(serverAddress, user, project)
             });
         }
     }
+
+
     if ('additionalConfigs' in metaDict) {
         for (const configKey in metaDict['additionalConfigs']) {
             var table = document.getElementById('configs-table');
@@ -760,29 +960,22 @@ async function parametersCheck(serverAddress, user, project)
             addConfigs();
           };
     } else {
-        const defaultKeys = ['remapToProteome'];
-        for (var defaultKey of defaultKeys) {
-            var table = document.getElementById('configs-table');
-            var lastRow = table.rows[ table.rows.length - 1 ];
-            lastRow.cells[0].getElementsByClassName('config-key')[0].value = defaultKey
-            lastRow.cells[1].getElementsByClassName('config-value')[0].value = 'True';
-            addConfigs();
-          };
-    }
+        if (variant !== 'pisces') {
+            const defaultKeys = ['remapToProteome'];
+            for (var defaultKey of defaultKeys) {
+                var table = document.getElementById('configs-table');
+                var lastRow = table.rows[ table.rows.length - 1 ];
+                lastRow.cells[0].getElementsByClassName('config-key')[0].value = defaultKey
+                lastRow.cells[1].getElementsByClassName('config-value')[0].value = 'True';
+                addConfigs();
+            };
+        };
+    };
 
-    var response = await fetch(
-        'http://' + serverAddress + ':5000/interact/metadata/' + user + '/' + project + '/core',
-        {
-            method: 'GET',
-        }
-    ).then( response => {
-        return response.json();
-    });
-
-    if (response['message']['variant'] === 'pathogen') {
-        setElementVisibility(["pepseek-filter-div"])
-    } else if (response['message']['variant'] === 'pathogen') {
-        setElementVisibility(["pepseek-filter-div"], null)
+    if (variant === 'pathogen') {
+        setElementVisibility(["pepseek-filter-div"]);
+    } else {
+        setElementVisibility(["pepseek-filter-div"], 'hidden');
     }
 }
 
@@ -878,10 +1071,22 @@ async function deleteProject(serverAddress, user, project) {
     } 
 };
 
-function constructConfigObject(user, project) {
+function constructConfigObject(user, project, mode = 'standard') {
     let ms1Accuracy = document.getElementById('ms1-accuracy-input').value;
     let mzAccuracy = document.getElementById('ms2-accuracy-input').value;
     let mzUnits = document.getElementById('ms2-unit-selection').value;
+    if (mode === 'invitro') {
+        let splicedUpperLimit = document.getElementById('spliced-upper-input').value;
+        var configObject = {
+            'user': user,
+            'project': project,
+            'ms1Accuracy': ms1Accuracy,
+            'mzAccuracy': mzAccuracy,
+            'splicedUpperLimit': splicedUpperLimit,
+            'mzUnits': mzUnits,
+        };
+        return configObject;
+    };
     let datasetType = document.getElementById('dataset-type-selection').value;
 
     var table = document.getElementById("raw-table");
@@ -923,6 +1128,15 @@ function constructConfigObject(user, project) {
         'technicalReplicates': Object.values(technicalReplicates)
     };
 
+    if (mode === 'pisces') {
+        var piscesSelection = document.getElementById('pisces-selection').value;
+        if (piscesSelection !== 'none'){
+            configObject['piscesSelection'] = document.getElementById('pisces-selection').value;
+            if (configObject['piscesSelection'] === 'noncan') {
+                configObject['crypticFolder'] = document.getElementById('pisces-cryptic-folder-selection').value;
+            };
+        };
+    }
 
     if (document.getElementById('panfeature').checked){
         configObject['useBindingAffinity'] = 'asFeature';
@@ -932,10 +1146,12 @@ function constructConfigObject(user, project) {
         configObject['alleles'] =  document.getElementById('netmhcpan-allele-input').value;
     };
 
-    if (document.getElementById('pepseekpep').checked){
-        configObject['epitopeCutLevel'] = 'peptide';
-    } else {
-        configObject['epitopeCutLevel'] = 'psm';
+    if (mode === 'pathogen') {
+        if (document.getElementById('pepseekpep').checked){
+            configObject['epitopeCutLevel'] = 'peptide';
+        } else {
+            configObject['epitopeCutLevel'] = 'psm';
+        }
     }
 
     //gets rows of table
@@ -965,15 +1181,15 @@ function constructConfigObject(user, project) {
     configObject['additionalConfigs'] = additionalConfigs;
     return configObject;
 }
-async function subsetPipeline(serverAddress, user, project) {
-    configObject = constructConfigObject(user, project);
+async function subsetPipeline(serverAddress, user, project, mode = 'standard') {
+    configObject = constructConfigObject(user, project, mode);
     configObject['metadata_type'] = 'parameters';
     
     await postJson(serverAddress, 'metadata', configObject);
     window.location.href = 'http://' + serverAddress + ':5000/interact-page/subset/' + user + '/' + project;  
 };
 
-async function executePipeline(serverAddress, user, project) {
+async function executePipeline(serverAddress, user, project, mode = 'standard') {
 
     let paramSaveElem = document.getElementById("params-save-text");
     paramSaveElem.style.display = "none";
@@ -982,7 +1198,7 @@ async function executePipeline(serverAddress, user, project) {
     let loadingElem = document.getElementById("loading-text");
     loadingElem.style.display = "block";
 
-    var configObject = constructConfigObject(user, project);
+    var configObject = constructConfigObject(user, project, mode);
 
     var response = await postJson(serverAddress, 'execute', configObject);
 
@@ -994,7 +1210,6 @@ async function executePipeline(serverAddress, user, project) {
 };
 
 async function constructSubsetObject(serverAddress, user, project) {
-    console.log('http://' + serverAddress + ':5000/interact/tasks_included/' + user  + '/' + project);
     var response = await fetch(
         'http://' + serverAddress + ':5000/interact/tasks_included/' + user  + '/' + project,
         {
@@ -1010,13 +1225,11 @@ async function constructSubsetObject(serverAddress, user, project) {
             includedTasks.push(task);
         }
     };
-    console.log(includedTasks);
     var subsetObject = {
         'user': user,
         'project': project,
         'includedTasks': includedTasks
     };
-    console.log(subsetObject);
     return subsetObject;
 };
 
@@ -1028,7 +1241,6 @@ async function executeSubsetPipeline(serverAddress, user, project) {
     
     let loadingElem = document.getElementById("loading-text");
     loadingElem.style.display = "block";
-    console.log('here');
 
     var subsetObject = await constructSubsetObject(serverAddress, user, project);
 
@@ -1039,11 +1251,11 @@ async function executeSubsetPipeline(serverAddress, user, project) {
 };
 
 
-async function saveParameters(serverAddress, user, project) {
+async function saveParameters(serverAddress, user, project, mode = 'standard') {
     let paramSaveElem = document.getElementById("params-save-text");
     paramSaveElem.style.display = "block";
 
-    configObject = constructConfigObject(user, project);
+    configObject = constructConfigObject(user, project, mode);
     configObject['metadata_type'] = 'parameters';
     
     await postJson(serverAddress, 'metadata', configObject);
